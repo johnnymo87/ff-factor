@@ -69,12 +69,13 @@ def get_return_data(price_data, period = "M"):
     ret_data.columns = ['portfolio']
     return ret_data
 
-def run_reg_model(ticker, start="1980-01-01"):
+def run_reg_model(ticker):
     # Get FF data
     ff_data = get_fama_french()
+    ff_first = ff_data.index[0].date()
     ff_last = ff_data.index[ff_data.shape[0] - 1].date()
     #Get the fund price data
-    price_data = get_price_data(ticker, start, ff_last.strftime("%Y-%m-%d"))
+    price_data = get_price_data(ticker, ff_first.strftime("%Y-%m-%d"), ff_last.strftime("%Y-%m-%d"))
     price_data = price_data.loc[:ff_last]
     ret_data = get_return_data(price_data, "M")
     all_data = pd.merge(pd.DataFrame(ret_data),ff_data, how = 'inner', left_index= True, right_index= True)
@@ -82,10 +83,8 @@ def run_reg_model(ticker, start="1980-01-01"):
     all_data['port_excess'] = all_data['portfolio'] - all_data['RF']
     # Run the model
     model = smf.formula.ols(formula = "port_excess ~ mkt_excess + SMB + HML", data = all_data).fit()
-    return model.params
+    return model.summary()
 
 if __name__ == '__main__':
-    # ggrax_model = run_reg_model("GGRAX")
-    # print(ggrax_model)
-    ff_data = get_fama_french()
-    print(ff_data.iloc[1112:1120],)
+    ggrax_model = run_reg_model("GGRAX")
+    print(ggrax_model)
