@@ -4,6 +4,6 @@ services:
   app:
     build:
       context: .
-      target: test
+      target: release
     volumes:
       - .:/app
