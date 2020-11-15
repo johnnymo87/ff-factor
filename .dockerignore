@@ -1,4 +1,5 @@
 *.pyc
 .python_history
+.git/
 downloads/
 plots/

@@ -1,5 +1,10 @@
 # Base image
-FROM python:3.8.3-buster AS base
+FROM python:3.9-buster AS base
+
+ENV PYTHONPATH=.
+
+COPY .bashrc /tmp/.bashrc
+RUN cat /tmp/.bashrc >> /root/.bashrc
 
 COPY requirements.txt /tmp/requirements.txt
 RUN  pip3 install --upgrade pip && \
@@ -10,8 +15,5 @@ FROM base AS release
 
 WORKDIR /app
 COPY . /app
-ENV PYTHONPATH=.
-
-RUN ln -sf /app/.python_history ~/.python_history
 
 CMD python3 .
