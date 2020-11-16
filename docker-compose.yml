@@ -7,3 +7,11 @@ services:
       target: release
     volumes:
       - .:/app
+    command: sleep infinity
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: example
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
