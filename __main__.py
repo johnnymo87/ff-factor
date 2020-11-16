@@ -7,9 +7,6 @@ import pandas as pd
 import pandas_datareader as web
 # To prepare design matrices using R-like formulas
 from patsy import dmatrices
-# To talk to the DB
-import sqlalchemy as db
-from sqlalchemy.orm import sessionmaker
 # Statsmodels to run our multiple regression model
 import statsmodels.api as sm
 from statsmodels.regression.rolling import RollingOLS
@@ -120,9 +117,7 @@ def run_reg_model(ticker, minimum_months=12):
     print(ols_results.summary())
 
 if __name__ == '__main__':
-    engine = db.create_engine('postgres://postgres:example@db/postgres', echo=True)
-    session = sessionmaker(bind=engine)()
-    ff_data = FactorData.fetch(engine, session, 'Emerging_5_Factors.csv')
+    ff_data = FactorData.fetch('Emerging_5_Factors.csv')
     import pdb; pdb.set_trace()
     tickers = ['EEMD']
     for ticker in tickers:

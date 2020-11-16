@@ -1,5 +1,6 @@
-from db.source_filename import SourceFilename
+from db.db import Engine, Session
 from db.factor import Factor
+from db.source_filename import SourceFilename
 # Pandas to read csv file and other things
 import pandas as pd
 # To talk to the DB
@@ -63,15 +64,15 @@ class FactorData:
         return ff_factors
 
     @staticmethod
-    def fetch(engine, session, filename):
+    def fetch(filename):
         """
-        @param [sqlalchemy engine]
         @param [sqlalchemy ORM session]
         @param [string] Filename of the CSV, e.g. Emerging_5_Factors.csv
         @raise [???] If file can't be found
         @raise [???] If the file isn't a CSV
         @return [pandas.core.frame.DataFrame]
         """
+        session = Session()
         source_filename = session.query(SourceFilename).filter(SourceFilename.filename == filename).one_or_none()
         if source_filename is None:
             print(f'Factor data for ${filename} not found in the DB, backfilling it from the CSV')
@@ -80,7 +81,7 @@ class FactorData:
             session.commit()
             source_filename = session.query(SourceFilename).filter(SourceFilename.filename == filename).one()
             ff_data['source_filename_id'] = source_filename.id
-            ff_data.to_sql('factors', engine, if_exists='append', index=False)
+            ff_data.to_sql('factors', Engine, if_exists='append', index=False)
             return ff_data
         else:
             query = session.query(Factor).filter(Factor.source_filename_id == source_filename.id)

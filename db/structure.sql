@@ -1,4 +1,4 @@
-drop table if exists stock_markets;
+drop table if exists source_filenames;
 create table source_filenames
 ( id serial primary key
 , filename text
@@ -17,3 +17,8 @@ create table factors
 , rmw numeric
 , cma numeric
 );
+
+alter table factors
+add constraint fk_factors_source_filename_id
+foreign key (source_filename_id)
+references source_filenames (id);
