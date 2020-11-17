@@ -61,6 +61,9 @@ class FactorData:
         # Adjust all column names to be downcased and underscored
         ff_factors = ff_factors.rename(columns=lambda x: x.replace('-', '_').lower())
 
+        # Name the index (date) column so that we can write it to the db
+        ff_factors.index.name = 'occurred_at'
+
         return ff_factors
 
     @staticmethod
@@ -81,7 +84,7 @@ class FactorData:
             session.commit()
             source_filename = session.query(SourceFilename).filter(SourceFilename.filename == filename).one()
             ff_data['source_filename_id'] = source_filename.id
-            ff_data.to_sql('factors', Engine, if_exists='append', index=False)
+            ff_data.to_sql('factors', Engine, if_exists='append')
             return ff_data
         else:
             query = session.query(Factor).filter(Factor.source_filename_id == source_filename.id)

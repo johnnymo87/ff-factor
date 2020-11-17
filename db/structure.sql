@@ -9,6 +9,7 @@ drop table if exists factors;
 create table factors
 ( id serial primary key
 , source_filename_id integer not null
+, occurred_at date not null
 , mkt_rf numeric not null
 , smb numeric not null
 , hml numeric not null
