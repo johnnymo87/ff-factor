@@ -12,44 +12,6 @@ import statsmodels.api as sm
 from statsmodels.regression.rolling import RollingOLS
 # To sleep in between requests to yahoo finance
 import time
-# To download the Fama French data from the web
-import urllib.request
-# To unzip the ZipFile
-import zipfile
-
-def get_fama_french():
-    # Web url
-    ff_url = "http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Emerging_5_Factors_CSV.zip"
-
-    # Download the file and save it
-    # We will name it fama_french.zip file
-    urllib.request.urlretrieve(ff_url, 'downloads/fama_french.zip')
-
-    with zipfile.ZipFile('downloads/fama_french.zip', 'r') as z:
-        # Next we extact the file data
-        z.extractall()
-        # Look up filename so we can read it
-        filename = z.namelist()[0]
-
-    # Now open the CSV file
-    ff_factors = pd.read_csv(f'downloads/{filename}', skiprows = 3, index_col = 0)
-
-    # We want to find out the row with NULL value
-    # We will skip these rows
-    ff_row = ff_factors.isnull().any(1).to_numpy().nonzero()[0][0]
-
-    # Read the csv file again with skipped rows
-    ff_factors = pd.read_csv(f'downloads/{filename}', skiprows = 3, nrows = ff_row, index_col = 0)
-
-    # Format the date index
-    ff_factors.index = pd.to_datetime(ff_factors.index, format='%Y%m')
-
-    # Format dates to end of month
-    ff_factors.index = ff_factors.index + pd.offsets.MonthEnd()
-
-    # Convert from percent to decimal
-    ff_factors = ff_factors.apply(lambda x: x/ 100)
-    return ff_factors
 
 # Build the get_price function
 # We need 3 arguments, ticker, start and end date
@@ -72,19 +34,20 @@ def get_return_data(price_data, period = "M"):
     # convert from series to DataFrame
     ret_data = pd.DataFrame(ret_data)
 
-    # Rename the Column
+    # Rename the columns
     ret_data.columns = ['portfolio']
+    ret_data['occurred_at'] = ret_data.index
+    ret_data['occurred_at'] = ret_data.occurred_at.dt.date
     return ret_data
 
 def run_reg_model(ticker, minimum_months=12):
     # Get FF data
-    ff_data = get_fama_french()
-    ff_first = ff_data.index[0].date()
-    ff_last = ff_data.index[ff_data.shape[0] - 1].date()
+    ff_data = FactorData.fetch('Emerging_5_Factors.csv')
+    ff_first = ff_data.occurred_at[0]
+    ff_last = ff_data.occurred_at[len(ff_data.occurred_at) - 1]
 
     # Get the fund price data
     price_data = get_price_data(ticker, ff_first.strftime("%Y-%m-%d"), ff_last.strftime("%Y-%m-%d"))
-    import pdb; pdb.set_trace()
     if price_data is None:
         return
     price_data = price_data.loc[:ff_last]
@@ -94,12 +57,11 @@ def run_reg_model(ticker, minimum_months=12):
         return
 
     # Join the FF and fund data
-    all_data = pd.merge(pd.DataFrame(ret_data), ff_data, how = 'inner', left_index= True, right_index= True)
-    all_data.rename(columns={"Mkt-RF":"mkt_excess"}, inplace=True)
-    all_data['port_excess'] = all_data['portfolio'] - all_data['RF']
+    all_data = pd.merge(ret_data, ff_data, on='occurred_at')
+    all_data['port_excess'] = all_data.portfolio - all_data.rf
 
     # Prepare endogenous and exogenous data sets
-    y, X = dmatrices('port_excess ~ mkt_excess + SMB + HML + RMW + CMA', data=all_data, return_type='dataframe')
+    y, X = dmatrices('port_excess ~ mkt_rf + smb + hml + rmw + cma', data=all_data, return_type='dataframe')
 
     # Draw rolling OLS plot
     rolling_ols_results = RollingOLS(y, X, window=minimum_months).fit()
@@ -117,8 +79,6 @@ def run_reg_model(ticker, minimum_months=12):
     print(ols_results.summary())
 
 if __name__ == '__main__':
-    ff_data = FactorData.fetch('Emerging_5_Factors.csv')
-    import pdb; pdb.set_trace()
     tickers = ['EEMD']
     for ticker in tickers:
         print()
