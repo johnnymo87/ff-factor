@@ -5,5 +5,5 @@ function pip-install-save {
     echo "Unable to save package $1 to requirements.txt because it was installed under a different name. Run 'pip freeze' to inspect installed packages."
     return 1
   fi
-  $1 >> requirements.txt
+  echo $1 >> requirements.txt
 }
