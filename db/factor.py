@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, DateTime, Integer, Numeric
+from sqlalchemy import Column, Date, Integer, Numeric
 
 Base = declarative_base()
 class Factor(Base):
@@ -7,7 +7,7 @@ class Factor(Base):
 
     id = Column(Integer, primary_key=True)
     source_filename_id = Column(Integer, nullable=False)
-    occurred_at = Column(DateTime, nullable=False)
+    occurred_at = Column(Date, nullable=False)
     mkt_rf = Column(Numeric, nullable=False)
     smb = Column(Numeric, nullable=False)
     hml = Column(Numeric, nullable=False)
