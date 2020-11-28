@@ -1,7 +1,8 @@
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Date, Integer, Numeric
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy_repr import RepresentableBase
 
-Base = declarative_base()
+Base = declarative_base(cls=RepresentableBase)
 class Factor(Base):
     __tablename__ = 'factors'
 
@@ -15,8 +16,3 @@ class Factor(Base):
     mom = Column(Numeric)
     rmw = Column(Numeric)
     cma = Column(Numeric)
-
-    def __repr__(self):
-       return "<SourceFilename(id='%d', filename='%s'>" % (
-           self.id,
-           self.filename)
