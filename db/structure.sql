@@ -22,4 +22,5 @@ create table factors
 alter table factors
 add constraint fk_factors_source_filename_id
 foreign key (source_filename_id)
-references source_filenames (id);
+references source_filenames (id)
+deferrable initially deferred;

@@ -82,12 +82,11 @@ class FactorData:
         if source_filename is None:
             print(f'Factor data for ${filename} not found in the DB, backfilling it from the CSV')
             ff_data = FactorData.parse_csv(filename)
-            session.add(SourceFilename(filename=filename))
-            session.commit()
-            source_filename = session.query(SourceFilename).filter(SourceFilename.filename == filename).one()
+            source_filename = SourceFilename(filename=filename)
+            session.add(source_filename)
+            session.flush()
             ff_data['source_filename_id'] = source_filename.id
-            ff_data.to_sql('factors', Engine, if_exists='append')
-            return ff_data
-        else:
-            query = session.query(Factor).filter(Factor.source_filename_id == source_filename.id)
-            return pd.read_sql(query.statement, query.session.bind)
+            session.add_all([Factor(**row) for _, row in ff_data.iterrows()])
+            session.commit()
+        query = session.query(Factor).filter(Factor.source_filename_id == source_filename.id)
+        return pd.read_sql(query.statement, query.session.bind)
