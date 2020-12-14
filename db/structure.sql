@@ -24,3 +24,14 @@ add constraint fk_factors_source_filename_id
 foreign key (source_filename_id)
 references source_filenames (id)
 deferrable initially deferred;
+
+
+drop table if exists ticker_prices;
+create table ticker_prices
+( id serial primary key
+, symbol text not null
+, occurred_at date not null
+, percentage_change numeric not null
+);
+
+create unique index uniqify_ticker_prices_by_occurrence ON ticker_prices (symbol, occurred_at);
