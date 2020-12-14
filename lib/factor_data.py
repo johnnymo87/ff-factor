@@ -1,10 +1,8 @@
-from db.db import Engine, Session
+from db.db import Session
 from db.factor import Factor
 from db.source_filename import SourceFilename
 # Pandas to read sql and csv files, and do some conversions
 import pandas as pd
-# To talk to the DB
-import sqlalchemy as db
 # To download the Fama French data from the web
 import urllib.request
 # To unzip the downloaded zip file
