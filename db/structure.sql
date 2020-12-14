@@ -1,7 +1,7 @@
 drop table if exists source_filenames;
 create table source_filenames
 ( id serial primary key
-, filename text
+, filename text not null
 );
 create unique index unique_source_filenames on source_filenames(filename);
 
