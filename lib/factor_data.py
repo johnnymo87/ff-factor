@@ -1,7 +1,7 @@
 from db.db import Engine, Session
 from db.factor import Factor
 from db.source_filename import SourceFilename
-# Pandas to read csv file and other things
+# Pandas to read sql and csv files, and do some conversions
 import pandas as pd
 # To talk to the DB
 import sqlalchemy as db
@@ -71,7 +71,6 @@ class FactorData:
     @staticmethod
     def fetch(filename):
         """
-        @param [sqlalchemy ORM session]
         @param [string] Filename of the CSV, e.g. Emerging_5_Factors.csv
         @raise [???] If file can't be found
         @raise [???] If the file isn't a CSV
