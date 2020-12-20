@@ -36,9 +36,10 @@ def run_reg_model(ticker, minimum_months=12):
     fig, _ = plt.subplots(figsize=(10, 20))
     rolling_ols_results.plot_recursive_coefficient(fig=fig, variables=variables)
     for ax in fig.axes[1:]:
-        ax.axhline(y=1, linewidth=2, color='g')
-        ax.axhline(y=0, linewidth=2, color='y')
-        ax.axhline(y=-1, linewidth=2, color='r')
+        ax.set_ylim(0, 1)
+        middle_line, lower_line, _ = ax.get_lines()
+        lower_line.remove()
+        ax.fill_between(*middle_line.get_data())
     plt.savefig(f'plots/Emerging_5_Factors/{ticker}.png')
 
     # Run non-rolling OLS regression
