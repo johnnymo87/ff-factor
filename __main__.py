@@ -28,11 +28,11 @@ def run_reg_model(ticker, minimum_months=12):
     all_data['port_excess'] = all_data.percentage_change - all_data.rf
 
     # Prepare endogenous and exogenous data sets
-    y, X = dmatrices('port_excess ~ mkt_rf + smb + hml + rmw + cma', data=all_data, return_type='dataframe')
+    endogenous, exogenous = dmatrices('port_excess ~ mkt_rf + smb + hml + rmw + cma', data=all_data, return_type='dataframe')
 
     # Draw rolling OLS plot
-    rolling_ols_results = RollingOLS(y, X, window=minimum_months).fit()
-    variables = [c for c in X.columns if c != 'Intercept']
+    rolling_ols_results = RollingOLS(endogenous, exogenous, window=minimum_months).fit()
+    variables = [c for c in exogenous.columns if c != 'Intercept']
     fig, _ = plt.subplots(figsize=(10, 20))
     rolling_ols_results.plot_recursive_coefficient(fig=fig, variables=variables)
     for ax in fig.axes[1:]:
@@ -42,7 +42,7 @@ def run_reg_model(ticker, minimum_months=12):
     plt.savefig(f'plots/Emerging_5_Factors/{ticker}.png')
 
     # Run non-rolling OLS regression
-    ols_results = sm.OLS(y, X).fit()
+    ols_results = sm.OLS(endogenous, exogenous).fit()
     print(ols_results.summary())
 
 if __name__ == '__main__':
