@@ -17,7 +17,7 @@ class FactorData:
         @param [string] Final bit of URL specifying the name of the zip file, e.g. Emerging_5_Factors_CSV.zip
         @raise [???] If file can't be downloaded
         """
-        urllib.request.urlretrieve(f'${URL}{filename}', f'downloads/${filename}')
+        urllib.request.urlretrieve(f'{URL}{filename}', f'downloads/{filename}')
 
     @staticmethod
     def extract_zipfile(filename):
@@ -77,7 +77,7 @@ class FactorData:
         session = Session()
         source_filename = session.query(SourceFilename).filter(SourceFilename.filename == filename).one_or_none()
         if source_filename is None:
-            print(f'Factor data for ${filename} not found in the DB, backfilling it from the CSV')
+            print(f'Factor data for {filename} not found in the DB, backfilling it from the CSV')
             ff_data = FactorData.parse_csv(filename)
             source_filename = SourceFilename(filename=filename)
             session.add(source_filename)

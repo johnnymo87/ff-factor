@@ -51,7 +51,7 @@ class TickerData:
             filter(TickerPrice.occurred_at >= start).\
             filter(TickerPrice.occurred_at <= end)
         if not session.query(query.exists()).scalar():
-            print(f'Ticker price data for (${ticker_symbol}, ${start}, ${end}) not found in the DB, backfilling it from the Yahoo API')
+            print(f'Ticker price data for ({ticker_symbol}, {start}, {end}) not found in the DB, backfilling it from the Yahoo API')
             yahoo_data = TickerData.get_yahoo_data(ticker_symbol, start, end)
             session.add_all([TickerPrice(**row) for _, row in yahoo_data.iterrows()])
             session.commit()
