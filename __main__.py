@@ -39,7 +39,7 @@ def run_reg_model(ticker, minimum_months=12):
         ax.axhline(y=1, linewidth=2, color='g')
         ax.axhline(y=0, linewidth=2, color='y')
         ax.axhline(y=-1, linewidth=2, color='r')
-    plt.savefig(f'plots/{ticker}.png')
+    plt.savefig(f'plots/Emerging_5_Factors/{ticker}.png')
 
     # Run non-rolling OLS regression
     ols_results = sm.OLS(y, X).fit()
