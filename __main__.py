@@ -2,6 +2,8 @@ from lib.factor_data import FactorData
 from lib.ticker_data import TickerData
 # To draw plots
 import matplotlib.pyplot as plt
+# To make a directory if it does not exist
+import os
 # Pandas to read csv file and other things
 import pandas as pd
 # To prepare design matrices using R-like formulas
@@ -12,9 +14,9 @@ from statsmodels.regression.rolling import RollingOLS
 # To sleep in between requests to yahoo finance
 import time
 
-def run_reg_model(ticker, minimum_months=12):
+def run_reg_model(analysis_type, ticker, minimum_months=12):
     # Get FF data
-    ff_data = FactorData.fetch('Emerging_5_Factors.csv')
+    ff_data = FactorData.fetch(analysis_type)
     ff_first = ff_data.occurred_at[0]
     ff_last = ff_data.occurred_at[len(ff_data.occurred_at) - 1]
 
@@ -40,7 +42,7 @@ def run_reg_model(ticker, minimum_months=12):
         middle_line, lower_line, _ = ax.get_lines()
         lower_line.remove()
         ax.fill_between(*middle_line.get_data())
-    plt.savefig(f'plots/Emerging_5_Factors/{ticker}.png')
+    plt.savefig(f'plots/{analysis_type}/{ticker}.png')
     plt.close(fig)
 
     # Run non-rolling OLS regression
@@ -48,6 +50,9 @@ def run_reg_model(ticker, minimum_months=12):
     print(ols_results.summary())
 
 if __name__ == '__main__':
+    analysis_type = 'Emerging_5_Factors.csv'
+    if not os.path.exists(f'plots/{analysis_type}'):
+        os.makedirs(f'plots/{analysis_type}')
     tickers = ['EEMD']
     for ticker in tickers:
         print()
