@@ -41,6 +41,7 @@ def run_reg_model(ticker, minimum_months=12):
         lower_line.remove()
         ax.fill_between(*middle_line.get_data())
     plt.savefig(f'plots/Emerging_5_Factors/{ticker}.png')
+    plt.close(fig)
 
     # Run non-rolling OLS regression
     ols_results = sm.OLS(endogenous, exogenous).fit()
