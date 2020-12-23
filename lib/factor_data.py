@@ -14,29 +14,30 @@ class FactorData:
     @staticmethod
     def download_zipfile(filename):
         """
-        @param [string] Final bit of URL specifying the name of the zip file, e.g. Emerging_5_Factors_CSV.zip
-        @raise [???] If file can't be downloaded
+        @param [string] Filename of the zip file without the suffix nor the extension, e.g. Emerging_5_Factors
+        @raise [FileNotFoundError] If downloads directory doesn't exist
+        @raise [urllib.error.URLError] If file can't be downloaded
         """
-        urllib.request.urlretrieve(f'{URL}{filename}', f'downloads/{filename}')
+        urllib.request.urlretrieve(f'{FactorData.URL}{filename}_CSV.zip', f'downloads/{filename}_CSV.zip')
 
     @staticmethod
     def extract_zipfile(filename):
         """
-        @param [string] Filename of the zip file, e.g. Emerging_5_Factors_CSV.zip
-        @raise [???] If file can't be found
+        @param [string] Filename of the zip file without the suffix nor the extension, e.g. Emerging_5_Factors
+        @raise [FileNotFoundError] If file can't be found
         @raise [???] If the file isn't a zip file
         @return [string] The filename of the CSV inside the zip
         """
-        with zipfile.ZipFile(f'downloads/{filename}', 'r') as z:
-            z.extractall()
+        with zipfile.ZipFile(f'downloads/{filename}_CSV.zip', 'r') as z:
+            z.extractall('downloads')
             # Look up CSV's filename, as it may differ slightly
             return z.namelist()[0]
 
     @staticmethod
     def parse_csv(filename):
         """
-        @param [string] Filename of the CSV, e.g. Emerging_5_Factors.csv
-        @raise [???] If file can't be found
+        @param [string] Filename of the CSV with the extension, e.g. Emerging_5_Factors.csv
+        @raise [FileNotFoundError] If file can't be found
         @raise [???] If the file isn't a CSV
         @return [pandas.core.frame.DataFrame] A cleaned-up dataframe, parsed from the CSV
         """
@@ -69,7 +70,7 @@ class FactorData:
     @staticmethod
     def fetch(filename):
         """
-        @param [string] Filename of the CSV, e.g. Emerging_5_Factors.csv
+        @param [string] Filename of the CSV without the extension, e.g. Emerging_5_Factors
         @raise [???] If file can't be found
         @raise [???] If the file isn't a CSV
         @return [pandas.core.frame.DataFrame]
@@ -78,7 +79,14 @@ class FactorData:
         source_filename = session.query(SourceFilename).filter(SourceFilename.filename == filename).one_or_none()
         if source_filename is None:
             print(f'Factor data for {filename} not found in the DB, backfilling it from the CSV')
-            ff_data = FactorData.parse_csv(filename)
+            try:
+                ff_data = FactorData.parse_csv(f'{filename}.csv')
+            except FileNotFoundError:
+                try:
+                    ff_data = FactorData.parse_csv(FactorData.extract_zipfile(filename))
+                except FileNotFoundError:
+                    FactorData.download_zipfile(filename)
+                    ff_data = FactorData.parse_csv(FactorData.extract_zipfile(filename))
             source_filename = SourceFilename(filename=filename)
             session.add(source_filename)
             session.flush()

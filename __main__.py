@@ -50,12 +50,12 @@ def run_reg_model(analysis_type, ticker, minimum_months=12):
     print(ols_results.summary())
 
 if __name__ == '__main__':
-    analysis_type = 'Emerging_5_Factors.csv'
+    analysis_type = 'Emerging_5_Factors'
     if not os.path.exists(f'plots/{analysis_type}'):
         os.makedirs(f'plots/{analysis_type}')
     tickers = ['EEMD']
     for ticker in tickers:
         print()
         print(ticker)
-        run_reg_model(ticker)
+        run_reg_model(analysis_type, ticker)
         time.sleep(1)
