@@ -31,12 +31,13 @@ references market_types (id)
 deferrable initially deferred;
 
 
-drop table if exists ticker_prices;
-create table ticker_prices
+drop table if exists investment_returns;
+
+create table investment_returns
 ( id serial primary key
-, symbol text not null
+, ticker_symbol text not null
 , occurred_at date not null
 , percentage_change numeric not null
 );
 
-create unique index uniqify_ticker_prices_by_occurrence ON ticker_prices (symbol, occurred_at);
+create unique index uniqify_investment_returns_by_occurrence ON investment_returns (ticker_symbol, occurred_at);

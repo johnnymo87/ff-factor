@@ -1,5 +1,5 @@
 from db.db import Session
-from db.ticker_price import TickerPrice
+from db.investment_return import InvestmentReturn
 # Pandas to read sql into a dataframe
 import pandas as pd
 # Datareader to download price data from the Yahoo API
@@ -31,7 +31,7 @@ class TickerData:
 
         # Rename the columns
         data.columns = ['percentage_change']
-        data['symbol'] = ticker_symbol
+        data['ticker_symbol'] = ticker_symbol
         data['occurred_at'] = data.index
         data['occurred_at'] = data.occurred_at.dt.date
         return data
@@ -46,13 +46,13 @@ class TickerData:
         @return [pandas.core.frame.DataFrame]
         """
         session = Session()
-        query = session.query(TickerPrice).\
-            filter(TickerPrice.symbol == ticker_symbol).\
-            filter(TickerPrice.occurred_at >= start).\
-            filter(TickerPrice.occurred_at <= end)
+        query = session.query(InvestmentReturn).\
+            filter(InvestmentReturn.ticker_symbol == ticker_symbol).\
+            filter(InvestmentReturn.occurred_at >= start).\
+            filter(InvestmentReturn.occurred_at <= end)
         if not session.query(query.exists()).scalar():
             print(f'Ticker price data for ({ticker_symbol}, {start}, {end}) not found in the DB, backfilling it from the Yahoo API')
             yahoo_data = TickerData.get_yahoo_data(ticker_symbol, start, end)
-            session.add_all([TickerPrice(**row) for _, row in yahoo_data.iterrows()])
+            session.add_all([InvestmentReturn(**row) for _, row in yahoo_data.iterrows()])
             session.commit()
         return pd.read_sql(query.statement, query.session.bind)
