@@ -4,8 +4,8 @@ from sqlalchemy_repr import RepresentableBase
 
 
 Base = declarative_base(cls=RepresentableBase)
-class SourceFilename(Base):
-    __tablename__ = 'source_filenames'
+class MarketType(Base):
+    __tablename__ = 'market_types'
 
     id = Column(Integer, primary_key=True)
-    filename = Column(String, nullable=False)
+    name = Column(String, nullable=False)

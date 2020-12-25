@@ -1,28 +1,33 @@
-drop table if exists source_filenames;
-create table source_filenames
-( id serial primary key
-, filename text not null
-);
-create unique index unique_source_filenames on source_filenames(filename);
+drop table if exists market_types;
 
-drop table if exists factors;
-create table factors
+create table market_types
 ( id serial primary key
-, source_filename_id integer not null
+, name text not null
+);
+
+create unique index market_type_names on market_types(name);
+
+drop table if exists factor_returns;
+
+create table factor_returns
+( id serial primary key
+, market_type_id integer not null
 , occurred_at date not null
-, mkt_rf numeric not null
-, smb numeric not null
-, hml numeric not null
-, rf numeric not null
-, mom numeric
-, rmw numeric
-, cma numeric
+, risk_free numeric not null
+, market_minus_risk_free numeric not null
+, small_minus_big numeric not null
+, high_minus_low numeric not null
+, robust_minus_weak numeric not null
+, conservative_minus_aggressive numeric not null
+, winners_minus_losers numeric not null
 );
 
-alter table factors
-add constraint fk_factors_source_filename_id
-foreign key (source_filename_id)
-references source_filenames (id)
+create unique index uniqify_factor_returns_by_occurrence ON factor_returns (market_type_id, occurred_at);
+
+alter table factor_returns
+add constraint fk_factor_returns_market_type_id
+foreign key (market_type_id)
+references market_types (id)
 deferrable initially deferred;
 
 

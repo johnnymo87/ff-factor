@@ -1,97 +1,40 @@
 from db.db import Session
-from db.factor import Factor
-from db.source_filename import SourceFilename
-# Pandas to read sql and csv files, and do some conversions
+from db.factor_return import FactorReturn
+from db.market_type import MarketType
+from lib.factor_data_downloader import FactorDataDownloader
+# Pandas to read and write sql
 import pandas as pd
-# To download the Fama French data from the web
-import urllib.request
-# To unzip the downloaded zip file
-import zipfile
 
 class FactorData:
-    URL = 'http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/'
+    @staticmethod
+    def download_and_write_data():
+        for market_type, data_frame in FactorDataDownloader.download_all().items():
+            FactorData.write(market_type, data_frame)
 
     @staticmethod
-    def download_zipfile(filename):
-        """
-        @param [string] Filename of the zip file without the suffix nor the extension, e.g. Emerging_5_Factors
-        @raise [FileNotFoundError] If downloads directory doesn't exist
-        @raise [urllib.error.URLError] If file can't be downloaded
-        """
-        urllib.request.urlretrieve(f'{FactorData.URL}{filename}_CSV.zip', f'downloads/{filename}_CSV.zip')
+    def write(market_type_name, data_frame):
+        session = Session()
+        market_type = session.query(MarketType).filter(MarketType.name == market_type_name).one_or_none()
+        if market_type is None:
+            market_type = MarketType(name=market_type_name)
+            session.add(market_type)
+            session.flush()
+            data_frame['market_type_id'] = market_type.id
+            session.add_all([FactorReturn(**row) for _, row in data_frame.iterrows()])
+            session.commit()
 
     @staticmethod
-    def extract_zipfile(filename):
+    def fetch(market_type_name):
         """
-        @param [string] Filename of the zip file without the suffix nor the extension, e.g. Emerging_5_Factors
-        @raise [FileNotFoundError] If file can't be found
-        @raise [???] If the file isn't a zip file
-        @return [string] The filename of the CSV inside the zip
-        """
-        with zipfile.ZipFile(f'downloads/{filename}_CSV.zip', 'r') as z:
-            z.extractall('downloads')
-            # Look up CSV's filename, as it may differ slightly
-            return z.namelist()[0]
-
-    @staticmethod
-    def parse_csv(filename):
-        """
-        @param [string] Filename of the CSV with the extension, e.g. Emerging_5_Factors.csv
-        @raise [FileNotFoundError] If file can't be found
-        @raise [???] If the file isn't a CSV
-        @return [pandas.core.frame.DataFrame] A cleaned-up dataframe, parsed from the CSV
-        """
-        # All CSVs from this site have a 3-row header that we skip
-        ff_factors = pd.read_csv(f'downloads/{filename}', skiprows=3, index_col=0)
-
-        # We want to find out the row with NULL values and skip them
-        null_rows = ff_factors.isnull().any(1).to_numpy().nonzero()[0][0]
-        ff_factors = pd.read_csv(f'downloads/{filename}', skiprows=3, nrows=null_rows, index_col=0)
-
-        # Format the date index
-        ff_factors.index = pd.to_datetime(ff_factors.index, format='%Y%m')
-
-        # Format dates to end of month
-        ff_factors.index = ff_factors.index + pd.offsets.MonthEnd()
-
-        # Convert from percent to decimal
-        ff_factors = ff_factors.apply(lambda x: x/ 100)
-
-        # Adjust all column names to be downcased and underscored
-        ff_factors = ff_factors.rename(columns=lambda x: x.replace('-', '_').lower())
-
-        # Clone the index (date) column to a regular column so that we can:
-        # * write it to the db
-        # * access it like a regular column
-        ff_factors['occurred_at'] = ff_factors.index
-
-        return ff_factors
-
-    @staticmethod
-    def fetch(filename):
-        """
-        @param [string] Filename of the CSV without the extension, e.g. Emerging_5_Factors
+        @param [string] The market type, e.g. Emerging
         @raise [???] If file can't be found
         @raise [???] If the file isn't a CSV
         @return [pandas.core.frame.DataFrame]
         """
         session = Session()
-        source_filename = session.query(SourceFilename).filter(SourceFilename.filename == filename).one_or_none()
-        if source_filename is None:
-            print(f'Factor data for {filename} not found in the DB, backfilling it from the CSV')
-            try:
-                ff_data = FactorData.parse_csv(f'{filename}.csv')
-            except FileNotFoundError:
-                try:
-                    ff_data = FactorData.parse_csv(FactorData.extract_zipfile(filename))
-                except FileNotFoundError:
-                    FactorData.download_zipfile(filename)
-                    ff_data = FactorData.parse_csv(FactorData.extract_zipfile(filename))
-            source_filename = SourceFilename(filename=filename)
-            session.add(source_filename)
-            session.flush()
-            ff_data['source_filename_id'] = source_filename.id
-            session.add_all([Factor(**row) for _, row in ff_data.iterrows()])
-            session.commit()
-        query = session.query(Factor).filter(Factor.source_filename_id == source_filename.id)
+        market_type = session.query(MarketType).filter(MarketType.name == market_type_name).one_or_none()
+        if market_type is None:
+            FactorData.download_and_write_data()
+            market_type = session.query(MarketType).filter(MarketType.name == market_type_name).one()
+        query = session.query(FactorReturn).filter(FactorReturn.market_type_id == market_type.id)
         return pd.read_sql(query.statement, query.session.bind)
