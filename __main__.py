@@ -39,6 +39,12 @@ def run_reg_model(market_type, ticker, minimum_months=12):
     endogenous, exogenous = dmatrices(FORMULA, data=all_data, return_type='dataframe')
 
     # Draw rolling OLS plot
+    rolling_ols_plot(endogenous, exogenous, minimum_months)
+
+    # Run non-rolling OLS regression
+    non_rolling_ols_regression(endogenous, exogenous)
+
+def rolling_ols_plot(endogenous, exogenous, minimum_months):
     rolling_ols_results = RollingOLS(endogenous, exogenous, window=minimum_months).fit()
     variables = [c for c in exogenous.columns if c != 'Intercept']
     fig, _ = plt.subplots(figsize=(18, 10))
@@ -62,7 +68,7 @@ def run_reg_model(market_type, ticker, minimum_months=12):
     plt.savefig(f'plots/{market_type}/{fill_percentage}_{ticker}.png')
     plt.close(fig)
 
-    # Run non-rolling OLS regression
+def non_rolling_ols_regression(endogenous, exogenous):
     ols_results = sm.OLS(endogenous, exogenous).fit()
     print(ols_results.summary())
 
