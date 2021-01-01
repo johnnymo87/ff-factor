@@ -18,9 +18,9 @@ FORMULA = """
 port_excess ~ market_minus_risk_free + small_minus_big + high_minus_low + robust_minus_weak + conservative_minus_aggressive + winners_minus_losers
 """
 
-def run_reg_model(analysis_type, ticker, minimum_months=12):
+def run_reg_model(market_type, ticker, minimum_months=12):
     # Get FF data
-    ff_data = FactorData.fetch(analysis_type)
+    ff_data = FactorData.fetch(market_type)
     ff_first = ff_data.occurred_at[0]
     ff_last = ff_data.occurred_at[len(ff_data.occurred_at) - 1]
 
@@ -46,7 +46,7 @@ def run_reg_model(analysis_type, ticker, minimum_months=12):
         middle_line, lower_line, _ = ax.get_lines()
         lower_line.remove()
         ax.fill_between(*middle_line.get_data())
-    plt.savefig(f'plots/{analysis_type}/{ticker}.png')
+    plt.savefig(f'plots/{market_type}/{ticker}.png')
     plt.close(fig)
 
     # Run non-rolling OLS regression
@@ -54,12 +54,12 @@ def run_reg_model(analysis_type, ticker, minimum_months=12):
     print(ols_results.summary())
 
 if __name__ == '__main__':
-    analysis_type = 'Emerging_5_Factors'
-    if not os.path.exists(f'plots/{analysis_type}'):
-        os.makedirs(f'plots/{analysis_type}')
+    market_type = 'Emerging_5_Factors'
+    if not os.path.exists(f'plots/{market_type}'):
+        os.makedirs(f'plots/{market_type}')
     tickers = ['EEMD']
     for ticker in tickers:
         print()
         print(ticker)
-        run_reg_model(analysis_type, ticker)
+        run_reg_model(market_type, ticker)
         time.sleep(1)
