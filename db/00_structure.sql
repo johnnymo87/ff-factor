@@ -22,6 +22,17 @@ add constraint fk_investments_market_type_id
 foreign key (market_type_id)
 references market_types (id);
 
+drop table if exists investment_returns;
+
+create table investment_returns
+( id serial primary key
+, ticker_symbol text not null
+, occurred_at date not null
+, percentage_change numeric not null
+);
+
+create unique index uniqify_investment_returns_by_occurrence ON investment_returns (ticker_symbol, occurred_at);
+
 drop table if exists factor_returns;
 
 create table factor_returns
@@ -43,15 +54,3 @@ alter table factor_returns
 add constraint fk_factor_returns_market_type_id
 foreign key (market_type_id)
 references market_types (id);
-
-
-drop table if exists investment_returns;
-
-create table investment_returns
-( id serial primary key
-, ticker_symbol text not null
-, occurred_at date not null
-, percentage_change numeric not null
-);
-
-create unique index uniqify_investment_returns_by_occurrence ON investment_returns (ticker_symbol, occurred_at);
