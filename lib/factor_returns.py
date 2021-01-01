@@ -14,11 +14,9 @@ class FactorReturns:
     @staticmethod
     def write(market_type_name, data_frame):
         session = Session()
-        market_type = session.query(MarketType).filter(MarketType.name == market_type_name).one_or_none()
-        if market_type is None:
-            market_type = MarketType(name=market_type_name)
-            session.add(market_type)
-            session.flush()
+        factor_returns = FactorReturn.query_by_market_type_name(market_type_name)
+        if not session.query(factor_returns.exists()).scalar():
+            market_type = session.query(MarketType).filter(MarketType.name == market_type_name).one()
             data_frame['market_type_id'] = market_type.id
             session.add_all([FactorReturn(**row) for _, row in data_frame.iterrows()])
             session.commit()
@@ -32,9 +30,7 @@ class FactorReturns:
         @return [pandas.core.frame.DataFrame]
         """
         session = Session()
-        market_type = session.query(MarketType).filter(MarketType.name == market_type_name).one_or_none()
-        if market_type is None:
+        factor_returns = FactorReturn.query_by_market_type_name(market_type_name)
+        if not session.query(factor_returns.exists()).scalar():
             FactorReturns.download_and_write_data()
-            market_type = session.query(MarketType).filter(MarketType.name == market_type_name).one()
-        query = session.query(FactorReturn).filter(FactorReturn.market_type_id == market_type.id)
-        return pd.read_sql(query.statement, query.session.bind)
+        return pd.read_sql(factor_returns.statement, factor_returns.session.bind)
