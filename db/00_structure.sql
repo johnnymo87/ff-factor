@@ -7,6 +7,21 @@ create table market_types
 
 create unique index market_type_names on market_types(name);
 
+drop table if exists investments;
+
+create table investments
+( id serial primary key
+, market_type_id integer not null
+, ticker_symbol text not null
+);
+
+create unique index uniqify_investments_by_ticker_symbol ON investments (ticker_symbol);
+
+alter table investments
+add constraint fk_investments_market_type_id
+foreign key (market_type_id)
+references market_types (id);
+
 drop table if exists factor_returns;
 
 create table factor_returns
@@ -27,8 +42,7 @@ create unique index uniqify_factor_returns_by_occurrence ON factor_returns (mark
 alter table factor_returns
 add constraint fk_factor_returns_market_type_id
 foreign key (market_type_id)
-references market_types (id)
-deferrable initially deferred;
+references market_types (id);
 
 
 drop table if exists investment_returns;

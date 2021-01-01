@@ -1,3 +1,4 @@
+from db.investment import Investment
 from lib.factor_returns import FactorReturns
 from lib.investment_returns import InvestmentReturns
 # To round off a long float
@@ -27,6 +28,7 @@ def run_reg_model(market_type, ticker, minimum_months=12):
     ff_last = ff_data.occurred_at[len(ff_data.occurred_at) - 1]
 
     ticker_data = InvestmentReturns.fetch(ticker, ff_first, ff_last)
+
     if len(ticker_data) < minimum_months:
         print(f'Less than {minimum_months} months of data, skipping!')
         return
@@ -73,10 +75,15 @@ def non_rolling_ols_regression(endogenous, exogenous):
     print(ols_results.summary())
 
 if __name__ == '__main__':
-    market_type = 'Emerging_5_Factors'
+    market_type = 'Emerging'
     if not os.path.exists(f'plots/{market_type}'):
         os.makedirs(f'plots/{market_type}')
-    tickers = ['EEMD']
+
+    investments = Investment \
+        .query_by_market_type_name(market_type) \
+        .filter(Investment.ticker_symbol == 'EEMD')
+    tickers = [i.ticker_symbol for i in investments]
+
     for ticker in tickers:
         print()
         print(ticker)
