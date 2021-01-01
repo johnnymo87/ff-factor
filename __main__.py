@@ -63,3 +63,7 @@ if __name__ == '__main__':
         print(ticker)
         run_reg_model(market_type, ticker)
         time.sleep(1)
+        try:
+            run_reg_model(market_type, ticker)
+        except KeyError as e:
+            print(f'Skipping {ticker} due to lack of Yahoo API response')
