@@ -39,7 +39,7 @@ def run_reg_model(analysis_type, ticker, minimum_months=12):
     # Draw rolling OLS plot
     rolling_ols_results = RollingOLS(endogenous, exogenous, window=minimum_months).fit()
     variables = [c for c in exogenous.columns if c != 'Intercept']
-    fig, _ = plt.subplots(figsize=(10, 20))
+    fig, _ = plt.subplots(figsize=(18, 10))
     rolling_ols_results.plot_recursive_coefficient(fig=fig, variables=variables)
     for ax in fig.axes[1:]:
         ax.set_ylim(0, 1)
