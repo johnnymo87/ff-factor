@@ -45,6 +45,7 @@ class InvestmentReturns:
         @param [Date] start Start date of the range (inclusive) of desired data
         @param [Date] end End date of the range (inclusive) of desired data
         @raise [pandas_datareader._utils.RemoteDataError] If Yahoo API response is not 200
+        @raise [requests.exceptions.ConnectionError] If unable to connect to the Yahoo API
         @return [pandas.core.frame.DataFrame]
         """
         session = Session()
