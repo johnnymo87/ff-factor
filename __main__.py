@@ -1,5 +1,7 @@
 from lib.factor_data import FactorData
 from lib.ticker_data import TickerData
+# To round off a long float
+import math
 # To draw plots
 import matplotlib.pyplot as plt
 # To make a directory if it does not exist
@@ -41,12 +43,23 @@ def run_reg_model(market_type, ticker, minimum_months=12):
     variables = [c for c in exogenous.columns if c != 'Intercept']
     fig, _ = plt.subplots(figsize=(18, 10))
     rolling_ols_results.plot_recursive_coefficient(fig=fig, variables=variables)
-    for ax in fig.axes[1:]:
+    head, *tail = fig.axes
+    fill_percentages = []
+    for ax in tail:
         ax.set_ylim(0, 1)
         middle_line, lower_line, _ = ax.get_lines()
         lower_line.remove()
-        ax.fill_between(*middle_line.get_data())
-    plt.savefig(f'plots/{market_type}/{ticker}.png')
+        xs, ys = middle_line.get_data()
+        normalized_ys = [max(min(y, 1), 0) for y in ys]
+        alpha = sum(normalized_ys) / len(normalized_ys)
+        middle_line.set_alpha(alpha)
+        ax.fill_between(xs, ys, alpha=alpha)
+        fill_percentage = math.ceil(alpha * 100)
+        ax.set_title(f'{ax.get_title()} {fill_percentage}%')
+        fill_percentages.append(fill_percentage)
+    fill_percentage = math.ceil(sum(fill_percentages) / len(fill_percentages))
+    head.text(0.99, 1.01, f'{fill_percentage}%')
+    plt.savefig(f'plots/{market_type}/{fill_percentage}_{ticker}.png')
     plt.close(fig)
 
     # Run non-rolling OLS regression
