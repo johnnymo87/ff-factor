@@ -1,5 +1,5 @@
-from lib.factor_data import FactorData
-from lib.ticker_data import TickerData
+from lib.factor_returns import FactorReturns
+from lib.investment_returns import InvestmentReturns
 # To round off a long float
 import math
 # To draw plots
@@ -22,11 +22,11 @@ port_excess ~ market_minus_risk_free + small_minus_big + high_minus_low + robust
 
 def run_reg_model(market_type, ticker, minimum_months=12):
     # Get FF data
-    ff_data = FactorData.fetch(market_type)
+    ff_data = FactorReturns.fetch(market_type)
     ff_first = ff_data.occurred_at[0]
     ff_last = ff_data.occurred_at[len(ff_data.occurred_at) - 1]
 
-    ticker_data = TickerData.fetch(ticker, ff_first, ff_last)
+    ticker_data = InvestmentReturns.fetch(ticker, ff_first, ff_last)
     if len(ticker_data) < minimum_months:
         print(f'Less than {minimum_months} months of data, skipping!')
         return

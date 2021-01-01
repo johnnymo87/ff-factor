@@ -16,7 +16,7 @@ import zipfile
 # To check if a file exists
 from os import path
 
-class FactorDataDownloader:
+class FactorReturnsDownloader:
     class BaseDataSource:
         def __init__(self, market_type, filename):
             self.__market_type = market_type
@@ -102,9 +102,9 @@ class FactorDataDownloader:
         @return [dict] For each pair, the key is a [string], and the value is a [pandas.core.frame.DataFrame]
         """
         result = {}
-        for data_source in FactorDataDownloader.DATA_SOURCES:
+        for data_source in FactorReturnsDownloader.DATA_SOURCES:
             result.setdefault(data_source.market_type(), [])
-            data_frame = FactorDataDownloader(data_source).to_data_frame()
+            data_frame = FactorReturnsDownloader(data_source).to_data_frame()
             result[data_source.market_type()].append(data_frame)
         for key, data_frames in result.items():
             result[key] = functools.reduce(lambda a, b: pd.merge(a, b, on='occurred_at'), data_frames)
