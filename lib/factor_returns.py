@@ -8,8 +8,8 @@ import pandas as pd
 class FactorReturns:
     @staticmethod
     def download_and_write_data():
-        for market_type, data_frame in FactorReturnsDownloader.download_all().items():
-            FactorReturns.write(market_type, data_frame)
+        for market_type_name, data_frame in FactorReturnsDownloader.download_all().items():
+            FactorReturns.write(market_type_name, data_frame)
 
     @staticmethod
     def write(market_type_name, data_frame):
