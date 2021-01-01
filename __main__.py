@@ -14,6 +14,10 @@ from statsmodels.regression.rolling import RollingOLS
 # To sleep in between requests to yahoo finance
 import time
 
+FORMULA = """
+port_excess ~ market_minus_risk_free + small_minus_big + high_minus_low + robust_minus_weak + conservative_minus_aggressive + winners_minus_losers
+"""
+
 def run_reg_model(analysis_type, ticker, minimum_months=12):
     # Get FF data
     ff_data = FactorData.fetch(analysis_type)
@@ -30,7 +34,7 @@ def run_reg_model(analysis_type, ticker, minimum_months=12):
     all_data['port_excess'] = all_data.percentage_change - all_data.rf
 
     # Prepare endogenous and exogenous data sets
-    endogenous, exogenous = dmatrices('port_excess ~ mkt_rf + smb + hml + rmw + cma', data=all_data, return_type='dataframe')
+    endogenous, exogenous = dmatrices(FORMULA, data=all_data, return_type='dataframe')
 
     # Draw rolling OLS plot
     rolling_ols_results = RollingOLS(endogenous, exogenous, window=minimum_months).fit()
