@@ -80,8 +80,6 @@ if __name__ == '__main__':
     for ticker in tickers:
         print()
         print(ticker)
-        run_reg_model(market_type, ticker)
-        time.sleep(1)
         try:
             run_reg_model(market_type, ticker)
         except KeyError as e:
