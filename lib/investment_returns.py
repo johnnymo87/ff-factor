@@ -17,7 +17,7 @@ class InvestmentReturns:
         @raise [pandas_datareader._utils.RemoteDataError] If Yahoo API response is not 200
         @return [pandas.core.frame.DataFrame]
         """
-        data = web.get_data_yahoo(ticker_symbol, start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d"))
+        data = web.get_data_yahoo(ticker_symbol, start, end)
 
         # Keep only the adjusted close column
         data = data['Adj Close']
