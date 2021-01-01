@@ -67,6 +67,9 @@ def rolling_ols_plot(endogenous, exogenous, minimum_months):
         fill_percentages.append(fill_percentage)
     fill_percentage = math.ceil(sum(fill_percentages) / len(fill_percentages))
     head.text(0.99, 1.01, f'{fill_percentage}%')
+
+    if not os.path.exists(f'plots/{market_type}'):
+        os.makedirs(f'plots/{market_type}')
     plt.savefig(f'plots/{market_type}/{fill_percentage}_{ticker}.png')
     plt.close(fig)
 
@@ -76,8 +79,6 @@ def non_rolling_ols_regression(endogenous, exogenous):
 
 if __name__ == '__main__':
     market_type = 'Emerging'
-    if not os.path.exists(f'plots/{market_type}'):
-        os.makedirs(f'plots/{market_type}')
 
     investments = Investment \
         .query_by_market_type_name(market_type) \
