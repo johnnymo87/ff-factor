@@ -31,7 +31,7 @@ def run_reg_model(analysis_type, ticker, minimum_months=12):
 
     # Join the FF and ticker data
     all_data = pd.merge(ticker_data, ff_data, on='occurred_at')
-    all_data['port_excess'] = all_data.percentage_change - all_data.rf
+    all_data['port_excess'] = all_data.percentage_change - all_data.risk_free
 
     # Prepare endogenous and exogenous data sets
     endogenous, exogenous = dmatrices(FORMULA, data=all_data, return_type='dataframe')
