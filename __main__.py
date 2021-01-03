@@ -30,7 +30,7 @@ def run_reg_model(market_type, ticker, minimum_months=12):
     ticker_data = InvestmentReturns.fetch(ticker, ff_first, ff_last)
 
     if len(ticker_data) < minimum_months:
-        print(f'Less than {minimum_months} months of data, skipping!')
+        print(f'Less than {minimum_months} months of data, skipping {ticker}!')
         return
 
     # Join the FF and ticker data
@@ -44,7 +44,7 @@ def run_reg_model(market_type, ticker, minimum_months=12):
     rolling_ols_plot(endogenous, exogenous, minimum_months)
 
     # Run non-rolling OLS regression
-    non_rolling_ols_regression(endogenous, exogenous)
+    return non_rolling_ols_regression(endogenous, exogenous)
 
 def rolling_ols_plot(endogenous, exogenous, minimum_months):
     rolling_ols_results = RollingOLS(endogenous, exogenous, window=minimum_months).fit()
@@ -70,25 +70,46 @@ def rolling_ols_plot(endogenous, exogenous, minimum_months):
 
     if not os.path.exists(f'plots/{market_type}'):
         os.makedirs(f'plots/{market_type}')
-    plt.savefig(f'plots/{market_type}/{fill_percentage}_{ticker}.png')
+    plt.savefig(f'plots/{market_type}/{ticker}.png')
     plt.close(fig)
 
 def non_rolling_ols_regression(endogenous, exogenous):
     ols_results = sm.OLS(endogenous, exogenous).fit()
-    print(ols_results.summary())
+    return ols_results
 
 if __name__ == '__main__':
     market_type = 'Emerging'
 
     investments = Investment \
         .query_by_market_type_name(market_type) \
-        .filter(Investment.ticker_symbol == 'EEMD')
+
     tickers = [i.ticker_symbol for i in investments]
 
+    results = {}
     for ticker in tickers:
-        print()
-        print(ticker)
         try:
-            run_reg_model(market_type, ticker)
+            result = run_reg_model(market_type, ticker)
+            if result is not None:
+                results[ticker] = result
         except KeyError as e:
             print(f'Skipping {ticker} due to lack of Yahoo API response')
+
+    dfs = []
+    for ticker, result in results.items():
+        df = pd.DataFrame({ 'coef': result.params, 'tvalue': result.tvalues, 'pvalue': result.pvalues })
+        df['factor'] = df.index
+        df['ticker'] = ticker
+        df.set_index(['ticker'])
+        dfs.append(df)
+
+    df = pd.concat(dfs)
+    # Round these numbers to make them human-readable
+    df = df.round(2)
+    # Exclude 'Intercept' because it's meaningless
+    # Exclude 'market_minus_risk_free' because it almost always 1.0
+    df = df[~df.factor.isin(['Intercept', 'market_minus_risk_free'])]
+    # Exclude statistically insignificant results
+    df = df[df.pvalue <= 0.2]
+    print('Consider catching a debugger here to play with the data frame')
+    print('Write "import pdb; pdb.set_trace()" and run "python ."')
+    print(df.head())
