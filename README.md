@@ -89,3 +89,6 @@ df[df.ticker == 'PIE']
 high_minus_low       -0.32   -2.05    0.04        high_minus_low    PIE
 winners_minus_losers  0.39    5.22    0.00  winners_minus_losers    PIE
 ```
+
+#### Pre-Emerging Markets
+For the sake of diversity, I'm considering [FM](https://www.ishares.com/us/products/239649/ishares-msci-frontier-100-etf), with a 0.79% expense ratio. It calls itself a ["Frontier" market](https://seekingalpha.com/article/4198945-frontier-markets-diversification-cheap-price) fund, with exposure to even more marginal countries. As the seeking alpha article notes, this market type has relatively low correlation to other market types. This is a positive in its own right, but it means I can't use any of Ken French's data to analyze it for desirable tilts.
