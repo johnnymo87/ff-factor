@@ -37,28 +37,43 @@ This application uses [docker](https://docs.docker.com/get-docker/) and [docker-
 
 ## Developing
 
-#### Debug
-* documentation [here](https://docs.python.org/3/library/pdb.html)
-* set a breakpoint with `import pdb; pdb.set_trace()`
-  * if you're using vim with [a project-specific .vimrc](https://andrew.stwrt.ca/posts/project-specific-vimrc/), you can type this with `<leader>db`
-* show where you are with `list`
-* continue with `continue`
-* quit with `quit`
 
-#### Play with the data frame
+#### Play around with the data frame
+
+Set a break point at the end of `__main__.py`, and run `python .` to catch it. Then play around with the data frame.
 ```py
-df # look at it
-df.sort_values(by=['coef'], ascending=False) # sort it
-df.head(20) # look at the first twenty rows
+import pdb; pdb.set_trace() # set a break point
+(Pdb) df # look at the data frame
+(Pdb) df.sort_values(by=['coef'], ascending=False) # sort it
+(Pdb) df.head(20) # look at the first twenty rows
 ```
 For ideas about how to further manipulate the data frame, google "pandas cheat sheet".
 
-#### Add a new python package
-* Inside the container, use the bash function `pip-install-save` to simultaneously install the python package and update `requirements.txt`. For example, say you wanted to install `pytest-timeout`:
-  ```sh
-  pip-install-save pytest-timeout
-  ```
-* This new package will be gone once you exit the container. But since it's still listed in requirements.txt, you can bake it into all future containers by rebuilding the image
-  ```sh
-  docker-compose build
-  ```
+## Conclusions
+
+#### Emerging markets
+
+My first choice is [EEMS](https://www.ishares.com/us/products/239642/ishares-msci-emerging-markets-smallcap-etf), with a 0.71% expense ratio. It's a "classic" choice since it's the only one that simultaneously exhibits small cap and value tilts at the same time, and it avoids the common problem of having a negative momentum tilt.
+```py
+smb = df[(df.coef >= 0) & (df.factor == 'small_minus_big')]
+hml = df[(df.coef >= 0) & (df.factor == 'high_minus_low')]
+
+df[(df.ticker.isin(smb.ticker)) & (df.ticker.isin(hml.ticker))]
+```
+```py
+                               coef  tvalue  pvalue                         factor ticker
+small_minus_big                0.62    8.07    0.00                small_minus_big   EEMS
+high_minus_low                 0.14    1.47    0.14                 high_minus_low   EEMS
+conservative_minus_aggressive -0.24   -1.96    0.05  conservative_minus_aggressive   EEMS
+winners_minus_losers           0.08    1.34    0.18           winners_minus_losers   EEMS
+```
+
+For the sake of diversity, my second choice is [PIE](https://www.invesco.com/us/financial-products/etfs/product-detail?audienceType=Ria&ticker=PIE), with a 0.90% expense ratio. It is the fund with the strongest momentum tilt.
+```py
+df[df.ticker == 'PIE']
+```
+```py
+                      coef  tvalue  pvalue                factor ticker
+high_minus_low       -0.32   -2.05    0.04        high_minus_low    PIE
+winners_minus_losers  0.39    5.22    0.00  winners_minus_losers    PIE
+```
