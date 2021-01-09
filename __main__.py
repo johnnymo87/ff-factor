@@ -103,6 +103,12 @@ if __name__ == '__main__':
         dfs.append(df)
 
     df = pd.concat(dfs)
+    # Remove inverse funds
+    inversed = df[(df.coef <= 0) & (df.factor == 'market_minus_risk_free')]
+    df = df[~df.ticker.isin(inversed.ticker)]
+    # Remove leveraged funds
+    leveraged = df[(df.coef >= 2) & (df.factor == 'market_minus_risk_free')]
+    df = df[~df.ticker.isin(leveraged.ticker)]
     # Round these numbers to make them human-readable
     df = df.round(2)
     # Exclude 'Intercept' because it's meaningless
