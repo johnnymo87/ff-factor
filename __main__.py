@@ -116,6 +116,13 @@ if __name__ == '__main__':
     df = df[~df.factor.isin(['Intercept', 'market_minus_risk_free'])]
     # Exclude statistically insignificant results
     df = df[df.pvalue <= 0.2]
-    print('Consider catching a debugger here to play with the data frame')
+    # Make data frames for promising funds for each factor
+    smb = df[(df.coef >= 0) & (df.factor == 'small_minus_big')]
+    hml = df[(df.coef >= 0) & (df.factor == 'high_minus_low')]
+    rmw = df[(df.coef >= 0) & (df.factor == 'robust_minus_weak')]
+    cma = df[(df.coef >= 0) & (df.factor == 'conservative_minus_aggressive')]
+    wml = df[(df.coef >= 0) & (df.factor == 'winners_minus_losers')]
+
+    print('Consider catching a debugger here to play with the data frames')
     print('Write "import pdb; pdb.set_trace()" and run "python ."')
     print(df.head())
