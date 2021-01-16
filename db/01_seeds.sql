@@ -43,6 +43,7 @@ join (
   ('EEMX'),
   ('EET'),
   ('EEV'),
+  ('EJAN'),
   ('EJUL'),
   ('ELD'),
   ('EMAG'),
