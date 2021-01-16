@@ -66,7 +66,9 @@ For ideas about how to further manipulate the data frame, google "pandas cheat s
 
 #### Emerging markets
 
-My first choice is [EEMS](https://www.ishares.com/us/products/239642/ishares-msci-emerging-markets-smallcap-etf), with a 0.71% expense ratio. It's a "classic" choice since it's the only one that simultaneously exhibits small cap and value tilts at the same time, and it avoids the common problem of having a negative momentum tilt.
+Ken French's data library [defines Emerging market countries](http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/Data_Library/f-f_5emerging.html) as, "Argentina, Brazil, Chile, China, Colombia, Czech Republic, Egypt, Greece, Hungary, India, Indonesia, Malaysia, Mexico, Pakistan, Peru, Philippines, Poland, Qatar, Russia, Saudi Arabia, South Africa, South Korea, Taiwan, Thailand, Turkey, United Arab Emirates."
+
+For the size and value factors, my choice is [EEMS](https://www.ishares.com/us/products/239642/ishares-msci-emerging-markets-smallcap-etf), with a 0.71% expense ratio. It's a "classic" choice since it's the only one that simultaneously exhibits small cap and value tilts at the same time, and it avoids the common problem of having a negative momentum tilt.
 ```py
 smb = df[(df.coef >= 0) & (df.factor == 'small_minus_big')]
 hml = df[(df.coef >= 0) & (df.factor == 'high_minus_low')]
@@ -81,7 +83,7 @@ conservative_minus_aggressive -0.24   -1.96    0.05  conservative_minus_aggressi
 winners_minus_losers           0.08    1.34    0.18           winners_minus_losers   EEMS
 ```
 
-For the sake of diversity, my second choice is [PIE](https://www.invesco.com/us/financial-products/etfs/product-detail?audienceType=Ria&ticker=PIE), with a 0.90% expense ratio. It is the fund with the strongest momentum tilt.
+For the momentum factor, my choice is [PIE](https://www.invesco.com/us/financial-products/etfs/product-detail?audienceType=Ria&ticker=PIE), with a 0.90% expense ratio. It is the fund with the strongest momentum tilt.
 ```py
 df[df.ticker == 'PIE']
 ```
