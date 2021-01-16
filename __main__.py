@@ -123,6 +123,10 @@ if __name__ == '__main__':
     cma = df[(df.coef >= 0) & (df.factor == 'conservative_minus_aggressive')]
     wml = df[(df.coef >= 0) & (df.factor == 'winners_minus_losers')]
 
+    coef_sum = df.groupby(['ticker']).sum()['coef'].to_frame().rename(columns={ 'coef': 'coef_sum' })
+    df = pd.merge(df, coef_sum, on='ticker')
+    df = df.sort_values(by=['coef_sum', 'ticker'])
+
     print('Consider catching a debugger here to play with the data frames')
     print('Write "import pdb; pdb.set_trace()" and run "python ."')
     print(df.head())
