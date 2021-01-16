@@ -114,7 +114,7 @@ For the size and value factors, my choice is [EEMS](https://www.ishares.com/us/p
 smb = df[(df.coef >= 0) & (df.factor == 'small_minus_big')]
 hml = df[(df.coef >= 0) & (df.factor == 'high_minus_low')]
 
-df[(df.ticker.isin(smb.ticker)) & (df.ticker.isin(hml.ticker))]
+df[(df.ticker.isin(smb.ticker)) & (df.ticker.isin(hml.ticker))].sort_values(by=['coef_sum', 'ticker', 'factor'])
 ```
 ```py
                                coef  tvalue  pvalue                         factor ticker
