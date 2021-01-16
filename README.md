@@ -20,6 +20,7 @@ This application combines the following data sources:
   scrape()
   // JSON.stringify(tickers)
   ```
+  * After manual study, I filter out many scraped tickers for not being equity, not having the correct country composition, or for being thematic and thus not represenative of all sectors.
 
 I am looking for ETFs that show returns that are statistically significantly similar to the returns of the factors in the Ken French data library.
 
