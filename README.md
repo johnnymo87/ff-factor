@@ -64,6 +64,47 @@ For ideas about how to further manipulate the data frame, google "pandas cheat s
 
 ## Conclusions
 
+The world market is roughly divided four-eighths US, three-eighths Developed ex US, and one-eighth Emerging. I intend to do the same with my equity allocation.
+
+#### Developed markets ex US
+
+Ken French's data library [defines Developed market ex US countries](http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/Data_Library/f-f_5developed.html) as, "Australia, Austria, Belgium, Canada, Switzerland, Germany, Denmark, Spain, Finland, France, Great, Greece, Hong Kong, Ireland, Italy, Japan, Netherlands, Norway, New Zealand, Portugal, Sweden, and Singapore".
+
+For the size and value factors, my choice is and [RODM](https://www.hartfordfunds.com/etfs/rodm.html). My data frame contained four choices, but after some manual research I excluded three of them for containing non-Developed countries, and one for being actively managed. Coincidentally, the remaining choice had the best expense ratio and the lowest yield (which is better for non-tax-advantaged accounts).
+```py
+smb = df[(df.coef >= 0) & (df.factor == 'small_minus_big')]
+hml = df[(df.coef >= 0) & (df.factor == 'high_minus_low')]
+neg = df[df.coef <= 0]
+
+df[~df.ticker.isin(neg.ticker)][(df.ticker.isin(smb.ticker)) & (df.ticker.isin(hml.ticker))].sort_values(by=['coef_sum', 'ticker', 'factor'])
+```
+```py
+coef  tvalue  pvalue             factor ticker  coef_sum   yield   expense ratio   actively managed  Non-Developed Countries
+0.30    2.16    0.03     high_minus_low   RODM      0.94   2.78%        0.29%            False
+0.46    2.77    0.01  robust_minus_weak   RODM      0.94   2.78%        0.29%            False
+0.18    2.05    0.04    small_minus_big   RODM      0.94   2.78%        0.29%            False
+0.23    2.21    0.03     high_minus_low   FNDC      1.23   2.76%        0.39%            False       South Korea (7.12%)
+0.57    4.71    0.00  robust_minus_weak   FNDC      1.23   2.76%        0.39%            False       South Korea (7.12%)
+0.43    6.94    0.00    small_minus_big   FNDC      1.23   2.76%        0.39%            False       South Korea (7.12%)
+0.43    2.82    0.01     high_minus_low   FYLD      1.41   3.72%        0.59%            True        China (9.06%)
+0.71    3.97    0.00  robust_minus_weak   FYLD      1.41   3.72%        0.59%            True        China (9.06%)
+0.27    2.99    0.00    small_minus_big   FYLD      1.41   3.72%        0.59%            True        China (9.06%)
+0.59    2.52    0.01     high_minus_low    FID      1.85   3.81%        0.60%            False       China (4.25%), South Korea (3.46%)
+1.01    3.67    0.00  robust_minus_weak    FID      1.85   3.81%        0.60%            False       China (4.25%), South Korea (3.46%)
+0.25    1.75    0.08    small_minus_big    FID      1.85   3.81%        0.60%            False       China (4.25%), South Korea (3.46%)
+```
+
+For the momentum factor, my choice is [IMOM](https://etfsite.alphaarchitect.com/imom/). It has the strongest momentum score out of any of the funds, and it has good scores in a few other factors too.
+```py
+df[df.ticker == 'IMOM']
+```
+```py
+coef  tvalue  pvalue                factor ticker
+0.63    1.91    0.06     robust_minus_weak   IMOM
+0.36    1.84    0.07       small_minus_big   IMOM
+0.54    4.23    0.00  winners_minus_losers   IMOM
+```
+
 #### Emerging markets
 
 Ken French's data library [defines Emerging market countries](http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/Data_Library/f-f_5emerging.html) as, "Argentina, Brazil, Chile, China, Colombia, Czech Republic, Egypt, Greece, Hungary, India, Indonesia, Malaysia, Mexico, Pakistan, Peru, Philippines, Poland, Qatar, Russia, Saudi Arabia, South Africa, South Korea, Taiwan, Thailand, Turkey, United Arab Emirates."
