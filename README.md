@@ -7,24 +7,12 @@ After reading [The Incredible Shrinking Alpha 2nd edition: How to be a successfu
 This application combines the following data sources:
 * Factor return data from [Ken French's data library](http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html)
 * Investment return data from the Yahoo Finance API
-* ETF ticker symbols by market types (`US`, `Developed ex US`, and `Emerging`) scraped from [etfdb.com](https://etfdb.com) with the following jquery in the browser console:
-  ```js
-  var tickers = []
-  function scrape() {
-    JSON.stringify([...$('td[data-th="Symbol"]')].forEach(function(el) { tickers.push(el.textContent) }));
-    if ($('li.page-next').length) {
-      $('li.page-next').click()
-      setTimeout(scrape, 5000);
-    }
-  }
-  scrape()
-  // JSON.stringify(tickers)
-  ```
-  * After manual study, I filter out many scraped tickers for not being equity, not having the correct country composition, or for being thematic and thus not represenative of all sectors.
+* Ticker symbols by market types (`US`, `Developed ex US`, and `Emerging`) found with the help of [Fidelity's ETF screener](https://research2.fidelity.com/pi/etf-screener)
+  * I look for ETFs of equity funds that are not leveraged or inverse, are not thematic, and have the country exposure appropriate for their market type
 
-I am looking for ETFs that show returns that are statistically significantly similar to the returns of the factors in the Ken French data library.
+I am looking for funds that show returns that are statistically significantly similar to the returns of the factors in the Ken French data library.
 
-Since exactly how I screen ETFs can vary from time to time, this application doesn't do that. All it does is pull all the relevant data into a data frame, `df` at the bottom of `__main__.py`. Catch a debug breakpoint beneath it to play with it.
+Since exactly how to choose the "best" fund is complicated, this application doesn't attempt to do that. All it does is pull all the relevant data into a data frame, `df` at the bottom of `__main__.py`. Catch a debug breakpoint beneath it to play with it.
 
 ## Getting started
 
