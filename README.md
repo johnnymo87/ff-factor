@@ -38,6 +38,14 @@ This application uses [docker](https://docs.docker.com/get-docker/) and [docker-
 
 ## Developing
 
+#### Install a new package
+
+While exec-ed into the container, but not while running the application:
+```sh
+pip-install-save LIBRARY_NAME_HERE
+```
+This script tries to write only the new library to `requirements.txt`, and not all it's dependencies. However, it doesn't always work, so verify its results.
+
 
 #### Play around with the data frame
 
