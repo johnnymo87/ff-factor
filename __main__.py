@@ -116,6 +116,8 @@ if __name__ == '__main__':
     df = df[~df.factor.isin(['Intercept', 'market_minus_risk_free'])]
     # Exclude statistically insignificant results
     df = df[df.pvalue <= 0.2]
+    # Make a data frames for all factors with negative results
+    neg = df[df.coef <= 0]
     # Make data frames for promising funds for each factor
     smb = df[(df.coef >= 0) & (df.factor == 'small_minus_big')]
     hml = df[(df.coef >= 0) & (df.factor == 'high_minus_low')]
