@@ -13,6 +13,9 @@ create table investments
 ( id serial primary key
 , market_type_id integer not null
 , ticker_symbol text not null
+, expense_ratio numeric
+, dividend_yield numeric
+, inception_date date
 );
 
 create unique index uniqify_investments_by_ticker_symbol ON investments (ticker_symbol);

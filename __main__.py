@@ -1,6 +1,7 @@
 from db.investment import Investment
 from lib.factor_returns import FactorReturns
 from lib.investment_returns import InvestmentReturns
+from lib.investments import Investments
 # To round off a long float
 import math
 # To draw plots
@@ -78,21 +79,39 @@ def non_rolling_ols_regression(endogenous, exogenous):
     return ols_results
 
 if __name__ == '__main__':
-    market_type = 'Emerging'
+    market_type = 'US'
 
-    investments = Investment \
-        .query_by_market_type_name(market_type) \
+    # Get the French-Fama Data
+    ff_data = FactorReturns.fetch(market_type)
+    ff_starts_at = ff_data.occurred_at[0]
+    ff_ends_at = ff_data.occurred_at[len(ff_data.occurred_at) - 1]
 
-    tickers = [i.ticker_symbol for i in investments]
+    # Get the investments to study
+    Investments().backfill_facts(market_type)
+    investments = Investments().query.for_analysis(market_type, ff_ends_at)
 
     results = {}
-    for ticker in tickers:
+    for investment in investments:
+        ticker_symbol = investment.ticker_symbol
         try:
-            result = run_reg_model(market_type, ticker)
-            if result is not None:
-                results[ticker] = result
+            # Get the returns of the investment
+            ticker_data = InvestmentReturns.fetch(ticker_symbol, ff_starts_at, ff_ends_at)
+            if len(ticker_data) < 12:
+                print(f'Less than 12 months of data, skipping {ticker_symbol}!')
+                continue
+
+            # Join the FF and investment returns data
+            all_data = pd.merge(ticker_data, ff_data, on='occurred_at')
+            all_data['port_excess'] = all_data.percentage_change - all_data.risk_free
+
+            # Prepare endogenous and exogenous data sets
+            endogenous, exogenous = dmatrices(FORMULA, data=all_data, return_type='dataframe')
+
+            # Run non-rolling OLS regression
+            results[ticker_symbol] = sm.OLS(endogenous, exogenous).fit()
+
         except KeyError as e:
-            print(f'Skipping {ticker} due to lack of Yahoo API response')
+            print(f'Skipping {ticker_symbol} due to lack of Yahoo API response')
 
     dfs = []
     for ticker, result in results.items():
@@ -103,6 +122,8 @@ if __name__ == '__main__':
         dfs.append(df)
 
     df = pd.concat(dfs)
+    df = pd.merge(df, investments.to_data_frame(), on='ticker')
+
     # Remove inverse funds
     inversed = df[(df.coef <= 0) & (df.factor == 'market_minus_risk_free')]
     df = df[~df.ticker.isin(inversed.ticker)]
