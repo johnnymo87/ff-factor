@@ -2,19 +2,12 @@ from db.investment import Investment
 from lib.factor_returns import FactorReturns
 from lib.investment_returns import InvestmentReturns
 from lib.investments import Investments
-# To round off a long float
-import math
-# To draw plots
-import matplotlib.pyplot as plt
-# To make a directory if it does not exist
-import os
 # Pandas to read csv file and other things
 import pandas as pd
 # To prepare design matrices using R-like formulas
 from patsy import dmatrices
 # Statsmodels to run our multiple regression model
 import statsmodels.api as sm
-from statsmodels.regression.rolling import RollingOLS
 # To sleep in between requests to yahoo finance
 import time
 
@@ -41,38 +34,8 @@ def run_reg_model(market_type, ticker, minimum_months=12):
     # Prepare endogenous and exogenous data sets
     endogenous, exogenous = dmatrices(FORMULA, data=all_data, return_type='dataframe')
 
-    # Draw rolling OLS plot
-    rolling_ols_plot(endogenous, exogenous, minimum_months)
-
     # Run non-rolling OLS regression
     return non_rolling_ols_regression(endogenous, exogenous)
-
-def rolling_ols_plot(endogenous, exogenous, minimum_months):
-    rolling_ols_results = RollingOLS(endogenous, exogenous, window=minimum_months).fit()
-    variables = [c for c in exogenous.columns if c != 'Intercept']
-    fig, _ = plt.subplots(figsize=(18, 10))
-    rolling_ols_results.plot_recursive_coefficient(fig=fig, variables=variables)
-    head, *tail = fig.axes
-    fill_percentages = []
-    for ax in tail:
-        ax.set_ylim(0, 1)
-        middle_line, lower_line, _ = ax.get_lines()
-        lower_line.remove()
-        xs, ys = middle_line.get_data()
-        normalized_ys = [max(min(y, 1), 0) for y in ys]
-        alpha = sum(normalized_ys) / len(normalized_ys)
-        middle_line.set_alpha(alpha)
-        ax.fill_between(xs, ys, alpha=alpha)
-        fill_percentage = math.ceil(alpha * 100)
-        ax.set_title(f'{ax.get_title()} {fill_percentage}%')
-        fill_percentages.append(fill_percentage)
-    fill_percentage = math.ceil(sum(fill_percentages) / len(fill_percentages))
-    head.text(0.99, 1.01, f'{fill_percentage}%')
-
-    if not os.path.exists(f'plots/{market_type}'):
-        os.makedirs(f'plots/{market_type}')
-    plt.savefig(f'plots/{market_type}/{ticker}.png')
-    plt.close(fig)
 
 def non_rolling_ols_regression(endogenous, exogenous):
     ols_results = sm.OLS(endogenous, exogenous).fit()
