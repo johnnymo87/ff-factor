@@ -1,4 +1,3 @@
-from db.investment import Investment
 from lib.factor_returns import FactorReturns
 from lib.investment_returns import InvestmentReturns
 from lib.investments import Investments
@@ -8,38 +7,10 @@ import pandas as pd
 from patsy import dmatrices
 # Statsmodels to run our multiple regression model
 import statsmodels.api as sm
-# To sleep in between requests to yahoo finance
-import time
 
 FORMULA = """
 port_excess ~ market_minus_risk_free + small_minus_big + high_minus_low + robust_minus_weak + conservative_minus_aggressive + winners_minus_losers
 """
-
-def run_reg_model(market_type, ticker, minimum_months=12):
-    # Get FF data
-    ff_data = FactorReturns.fetch(market_type)
-    ff_first = ff_data.occurred_at[0]
-    ff_last = ff_data.occurred_at[len(ff_data.occurred_at) - 1]
-
-    ticker_data = InvestmentReturns.fetch(ticker, ff_first, ff_last)
-
-    if len(ticker_data) < minimum_months:
-        print(f'Less than {minimum_months} months of data, skipping {ticker}!')
-        return
-
-    # Join the FF and ticker data
-    all_data = pd.merge(ticker_data, ff_data, on='occurred_at')
-    all_data['port_excess'] = all_data.percentage_change - all_data.risk_free
-
-    # Prepare endogenous and exogenous data sets
-    endogenous, exogenous = dmatrices(FORMULA, data=all_data, return_type='dataframe')
-
-    # Run non-rolling OLS regression
-    return non_rolling_ols_regression(endogenous, exogenous)
-
-def non_rolling_ols_regression(endogenous, exogenous):
-    ols_results = sm.OLS(endogenous, exogenous).fit()
-    return ols_results
 
 if __name__ == '__main__':
     market_type = 'US'
