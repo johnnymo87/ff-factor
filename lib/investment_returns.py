@@ -4,12 +4,11 @@ from db.investment_return import InvestmentReturn
 import pandas as pd
 # Datareader to download price data from the Yahoo API
 import pandas_datareader as web
-
 import time
 
 class InvestmentReturns:
     @staticmethod
-    def get_yahoo_data(ticker_symbol, start, end):
+    def get_percentage_change_data(ticker_symbol, start, end):
         """
         @param [string] ticker_symbol Ticker symbol of the stock
         @param [Date] start Start date of the range (inclusive) of desired data
@@ -55,7 +54,7 @@ class InvestmentReturns:
             filter(InvestmentReturn.occurred_at <= end)
         if not session.query(query.exists()).scalar():
             print(f'Ticker price data for ({ticker_symbol}, {start}, {end}) not found in the DB, backfilling it from the Yahoo API')
-            yahoo_data = InvestmentReturns.get_yahoo_data(ticker_symbol, start, end)
-            session.add_all([InvestmentReturn(**row) for _, row in yahoo_data.iterrows()])
+            percentage_change_data = InvestmentReturns.get_percentage_change_data(ticker_symbol, start, end)
+            session.add_all([InvestmentReturn(**row) for _, row in percentage_change_data.iterrows()])
             session.commit()
         return pd.read_sql(query.statement, query.session.bind)
