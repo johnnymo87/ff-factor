@@ -13,7 +13,8 @@ class InvestmentQuery(Query):
     def for_analysis(self, market_type_name, analysis_ends_at):
         return self.\
             by_market_type_name(market_type_name).\
-            with_at_least_twelve_full_months_of_history(analysis_ends_at)
+            with_at_least_twelve_full_months_of_history(analysis_ends_at).\
+            order_by(Investment.ticker_symbol)
 
     def with_at_least_twelve_full_months_of_history(self, analysis_ends_at):
         twelve_months_before_first_day_of_this_month =\
