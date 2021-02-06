@@ -40,12 +40,15 @@ This application uses [docker](https://docs.docker.com/get-docker/) and [docker-
 
 #### Install a new package
 
-While exec-ed into the container, but not while running the application:
-```sh
-pip-install-save LIBRARY_NAME_HERE
-```
-This script tries to write only the new library to `requirements.txt`, and not all it's dependencies. However, it doesn't always work, so verify its results.
-
+* Add the package name to `requirements.in`. Then, while exec-ed into the container, but not while running the application, run:
+  ```sh
+  pip-compile --output-file=- > requirements.txt
+  ```
+  This will write to `requirements.txt`. For more details, see [this stackoverflow](https://stackoverflow.com/a/65666949/2197402).
+* This new package will be gone once you exit the container. But since it's still listed in requirements.txt, you can bake it into all future containers by rebuilding the image
+  ```sh
+  docker-compose build
+  ```
 
 #### Play around with the data frame
 
