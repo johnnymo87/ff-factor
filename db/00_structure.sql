@@ -48,7 +48,6 @@ create table factor_returns
 , high_minus_low numeric not null
 , robust_minus_weak numeric not null
 , conservative_minus_aggressive numeric not null
-, winners_minus_losers numeric not null
 );
 
 create unique index uniqify_factor_returns_by_occurrence ON factor_returns (market_type_id, occurred_at);

@@ -77,21 +77,10 @@ class FactorReturnsDownloader:
         def columns(self):
             return self.__columns
 
-    class MomentumFactorDataSource(BaseDataSource):
-        def __init__(self, market_type, filename):
-            self.__columns = ['occurred_at', 'winners_minus_losers']
-            super().__init__(market_type, filename)
-
-        def columns(self):
-            return self.__columns
-
     DATA_SOURCES = [
         FiveFactorDataSource('Emerging', 'Emerging_5_Factors'),
-        MomentumFactorDataSource('Emerging', 'Emerging_MOM_Factor'),
         FiveFactorDataSource('Developed ex US', 'Developed_ex_US_5_Factors'),
-        MomentumFactorDataSource('Developed ex US', 'Developed_ex_US_Mom_Factor'),
         FiveFactorDataSource('US', 'F-F_Research_Data_5_Factors_2x3'),
-        MomentumFactorDataSource('US', 'F-F_Momentum_Factor')
     ]
 
     @staticmethod

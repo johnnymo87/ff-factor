@@ -18,7 +18,6 @@ class FactorReturn(Base):
     high_minus_low = Column(Numeric, nullable=False)
     robust_minus_weak = Column(Numeric)
     conservative_minus_aggressive = Column(Numeric)
-    winners_minus_losers = Column(Numeric)
 
     market_type = relationship(MarketType, foreign_keys=[market_type_id])
 

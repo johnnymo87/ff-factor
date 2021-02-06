@@ -8,8 +8,8 @@ from patsy import dmatrices
 # Statsmodels to run our multiple regression model
 import statsmodels.api as sm
 
-FORMULA = """
-port_excess ~ market_minus_risk_free + small_minus_big + high_minus_low + robust_minus_weak + conservative_minus_aggressive + winners_minus_losers
+FIVE_FACTOR_FORMULA = """
+port_excess ~ market_minus_risk_free + small_minus_big + high_minus_low + robust_minus_weak + conservative_minus_aggressive
 """
 
 if __name__ == '__main__':
@@ -38,10 +38,8 @@ if __name__ == '__main__':
             all_data = pd.merge(ticker_data, ff_data, on='occurred_at')
             all_data['port_excess'] = all_data.percentage_change - all_data.risk_free
 
-            # Prepare endogenous and exogenous data sets
-            endogenous, exogenous = dmatrices(FORMULA, data=all_data, return_type='dataframe')
-
-            # Run non-rolling OLS regression
+            # Run OLS regression
+            endogenous, exogenous = dmatrices(FIVE_FACTOR_FORMULA, data=all_data, return_type='dataframe')
             results[ticker_symbol] = sm.OLS(endogenous, exogenous).fit()
 
         except KeyError as e:
@@ -78,7 +76,6 @@ if __name__ == '__main__':
     hml = df[(df.coef >= 0) & (df.factor == 'high_minus_low')]
     rmw = df[(df.coef >= 0) & (df.factor == 'robust_minus_weak')]
     cma = df[(df.coef >= 0) & (df.factor == 'conservative_minus_aggressive')]
-    wml = df[(df.coef >= 0) & (df.factor == 'winners_minus_losers')]
 
     coef_sum = df.groupby(['ticker']).sum()['coef'].to_frame().rename(columns={ 'coef': 'coef_sum' })
     df = pd.merge(df, coef_sum, on='ticker')
