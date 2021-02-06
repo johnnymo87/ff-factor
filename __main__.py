@@ -8,6 +8,8 @@ from patsy import dmatrices
 # Statsmodels to run our multiple regression model
 import statsmodels.api as sm
 
+from lib.linear_optimizer import optimize
+
 FIVE_FACTOR_FORMULA = """
 port_excess ~ market_minus_risk_free + small_minus_big + high_minus_low + robust_minus_weak + conservative_minus_aggressive
 """
@@ -55,7 +57,7 @@ if __name__ == '__main__':
         dfs.append(df)
 
     df = pd.concat(dfs)
-    df = pd.merge(df, investments.to_data_frame(), on='ticker')
+    # df = pd.merge(df, investments.to_data_frame(), on='ticker')
 
     # Remove inverse funds
     inversed = df[(df.coef <= 0) & (df.factor == 'market_minus_risk_free')]
@@ -63,25 +65,16 @@ if __name__ == '__main__':
     # Remove leveraged funds
     leveraged = df[(df.coef >= 2) & (df.factor == 'market_minus_risk_free')]
     df = df[~df.ticker.isin(leveraged.ticker)]
-    # Round these numbers to make them human-readable
-    df = df.round(2)
-    # Exclude 'Intercept' because it's meaningless
-    # Exclude 'market_minus_risk_free' because it almost always 1.0
-    df = df[~df.factor.isin(['Intercept', 'market_minus_risk_free'])]
+    # Exclude 'Intercept' because it almost always very close to zero
+    df = df[~df.factor.isin(['Intercept'])]
+    # Exclude 'market_minus_risk_free' because it usually close to one
+    df = df[~df.factor.isin(['market_minus_risk_free'])]
+
     # Exclude statistically insignificant results
     df = df[df.pvalue <= 0.2]
-    # Make a data frames for all factors with negative results
-    neg = df[df.coef <= 0]
-    # Make data frames for promising funds for each factor
-    smb = df[(df.coef >= 0) & (df.factor == 'small_minus_big')]
-    hml = df[(df.coef >= 0) & (df.factor == 'high_minus_low')]
-    rmw = df[(df.coef >= 0) & (df.factor == 'robust_minus_weak')]
-    cma = df[(df.coef >= 0) & (df.factor == 'conservative_minus_aggressive')]
 
-    coef_sum = df.groupby(['ticker']).sum()['coef'].to_frame().rename(columns={ 'coef': 'coef_sum' })
-    df = pd.merge(df, coef_sum, on='ticker')
-    df = df.sort_values(by=['coef_sum', 'ticker'])
+    # print('Consider catching a debugger here to play with the data frames')
+    # print('Write "import pdb; pdb.set_trace()" and run "python ."')
+    # print(df.head())
 
-    print('Consider catching a debugger here to play with the data frames')
-    print('Write "import pdb; pdb.set_trace()" and run "python ."')
-    print(df.head())
+    optimize(df, investments.to_data_frame())
