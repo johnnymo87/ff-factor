@@ -86,20 +86,24 @@ def optimize(factors, investments):
     # Instantiate a Glop solver, naming it SolveStigler in honor of the original problem
     solver = pywraplp.Solver('SolveStigler', pywraplp.Solver.GLOP_LINEAR_PROGRAMMING)
 
-    # Objective: maximize the exposure to factors
+    # Objective: maximize the exposure to factors for minimal price
     objective = solver.Objective()
-
-    columns = df.columns.drop('ticker') # factors only
-    variables = [[]] * len(columns)
-    for i, column in enumerate(columns):
-        variables[i] = solver.NumVar(min(df[column]), max(df[column]), column)
+    variables = [[]] * len(df)
+    for i, row in df.iterrows():
+        variables[i] = solver.NumVar(0, solver.infinity(), row.ticker)
         objective.SetCoefficient(variables[i], 1)
     objective.SetMaximization()
 
-    constraints = [0] * len(df)
-    for i, row in df.iterrows():
-        constraints[i] = solver.Constraint(0, 1, row.ticker)
-        for j, column in enumerate(columns):
+    columns = df.columns.drop('ticker')
+    constraints = [0] * len(columns)
+    for i, column in enumerate(columns):
+        # _min = 0
+        _min = min(df[column])
+        _max = max(df[column])
+        # print(f'{column} min: {round(_min, 2)} max: {round(_max, 2)}')
+        constraints[i] = solver.Constraint(_min, _max, column)
+        for j, row in df.iterrows():
+            # print(f'{variables[j]} coef {round(row[column], 2)}')
             constraints[i].SetCoefficient(variables[j], row[column])
 
     # Solve!
