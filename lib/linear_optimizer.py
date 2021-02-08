@@ -82,37 +82,50 @@ def optimize(factors, investments):
     # df = pd.merge(factors, investments, on='ticker')
     df = factors
     df = df.reset_index()
+    df = df.sort_values(by=['ticker'], ascending=False)
 
     # Instantiate a Glop solver, naming it SolveStigler in honor of the original problem
     solver = pywraplp.Solver('SolveStigler', pywraplp.Solver.GLOP_LINEAR_PROGRAMMING)
 
     # Each possible investment is a variable
-    variables = [solver.NumVar(0, solver.infinity(), row.ticker) for _, row in df.iterrows()]
+    ticker_variables = [solver.NumVar(0, solver.infinity(), row.ticker) for _, row in df.iterrows()]
+    # Each factor is a variable
+    columns = df.columns.drop('ticker') # factors only
+    factor_variables = [solver.NumVar(0, solver.infinity(), column) for column in columns]
+
     constraints = []
 
-    # constraint 1: 0 ≤ sum of all investments ≤ 100
-    constraint = solver.Constraint(0, 100, 'sum')
-    for i, row in df.iterrows():
-        constraint.SetCoefficient(variables[i], 1)
+    # constraint 1: 100 ≤ sum of all investments ≤ 100
+    constraint = solver.Constraint(100, 100, 'sum')
+    for ticker_variable in ticker_variables:
+        constraint.SetCoefficient(ticker_variable, 1)
     constraints.append(constraint)
 
     # data frame with normalized factor exposures
     ndf = df.copy(deep=True)
     ndf.iloc[:, 1:] = ndf.iloc[:, 1:].apply(lambda x: (x - x.mean()) / x.std(), axis=0)
-    # constraint per factor: min[factor] *100 ≤ sum of all investment's exposure to factor ≤ max[factor] * 100
-    columns = ndf.columns.drop('ticker') # factors only
-    mins = ndf[columns].min()
-    maxs = ndf[columns].max()
+
+    # constraint with ticker variables: min[factor] * 100 ≤ sum of all investment's exposure to factor ≤ max[factor] * 100
+    mins = ndf[columns].min().mul(100)
+    maxs = ndf[columns].max().mul(100)
     for column in columns:
         constraint = solver.Constraint(mins[column], maxs[column], column)
         constraints.append(constraint)
         for i, row in ndf.iterrows():
-            constraint.SetCoefficient(variables[i], row[column])
+            constraint.SetCoefficient(ticker_variables[i], row[column])
+
+    # constraint with factor variables: min[factor] * 100 ≤ sum of all investment's exposure to factor ≤ max[factor] * 100
+    for i, column in enumerate(columns):
+        constraint = solver.Constraint(mins[column], maxs[column], column)
+        constraints.append(constraint)
+        _sum = sum(row[column] for _, row in ndf.iterrows())
+        constraint.SetCoefficient(factor_variables[i], _sum)
 
     # Objective: maximize the exposure to all factors equally
     objective = solver.Objective()
-    for i, row in df.iterrows():
-        objective.SetCoefficient(variables[i], 1)
+    for i, column in enumerate(columns):
+        objective.SetCoefficient(factor_variables[i], maxs[column])
+        # objective.SetCoefficient(factor_variables[i], 1)
     objective.SetMaximization()
 
     # Solve!
@@ -130,22 +143,24 @@ def optimize(factors, investments):
         print('The solver could not solve the problem')
         import pdb; pdb.set_trace()
 
-    solutions = { str(variable): variable.solution_value() for variable in variables if variable.solution_value() > 0 }
-    total = sum(solutions.values())
-    percentages = { ticker: solution / total for ticker, solution in solutions.items() }
+    solutions = { str(variable): variable.solution_value() for variable in ticker_variables if variable.solution_value() > 0 }
+    # total = sum(solutions.values())
+    # percentages = { ticker: solution / total for ticker, solution in solutions.items() }
 
-    sf = df[df.ticker.isin(percentages.keys())].loc[:]
+    sf = df[df.ticker.isin(solutions.keys())].loc[:]
     print('Chosen investments')
     print(sf.round(2))
 
     print('Percent allocation by investment')
-    print({ ticker: round(percent * 100, 1) for ticker, percent in percentages.items() })
+    print({ ticker: round(percent, 1) for ticker, percent in solutions.items() })
 
-    for ticker, percent in percentages.items():
+    for ticker, percent in solutions.items():
         sf.loc[sf.ticker == ticker, columns] =\
             sf.loc[sf.ticker == ticker, columns].\
-            apply(lambda x: x * percent)
+            apply(lambda x: x * percent / 100)
     print('Factor exposure')
     print(sf[columns].sum().round(2))
 
+    import pareto
+    df_pareto = pd.DataFrame.from_records(pareto.eps_sort([*df[columns].itertuples(index=False)]), columns=columns.values)
     import pdb; pdb.set_trace()
