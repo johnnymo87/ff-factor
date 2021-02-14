@@ -63,7 +63,7 @@
 
 # https://developers.google.com/optimization/lp/glop#python_data
 import pandas as pd
-from ortools.linear_solver import pywraplp
+from ortools.algorithms import pywrapknapsack_solver
 
 def optimize(factors, investments):
     renamed = {
@@ -84,13 +84,48 @@ def optimize(factors, investments):
     df = df.reset_index()
     df = df.sort_values(by=['ticker'], ascending=False)
 
-    # Instantiate a Glop solver, naming it SolveStigler in honor of the original problem
-    solver = pywraplp.Solver('SolveStigler', pywraplp.Solver.GLOP_LINEAR_PROGRAMMING)
+    columns = df.columns.drop('ticker') # factors only
+
+    # Available solvers:
+    # KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER
+    # KNAPSACK_MULTIDIMENSION_CBC_MIP_SOLVER
+    # KNAPSACK_MULTIDIMENSION_SCIP_MIP_SOLVER
+    solver = pywrapknapsack_solver.KnapsackSolver(
+        pywrapknapsack_solver.KnapsackSolver.
+        KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER, 'FFFactorKnapsackSolver')
+
+
+    # data frame with normalized factor exposures
+    # ndf = df.copy(deep=True)
+    # ndf.iloc[:, 1:] = ndf.iloc[:, 1:].apply(lambda x: (x - x.mean()) / x.std(), axis=0)
+
+    sums = df[columns].sum(axis=1) # sum of all factors for each ticker
+    maxs = df[columns].max()       # max of each type of factor
+
+    # data frame of "max minus my" exposures, to capture opportunity cost
+    cdf = df.copy(deep=True)
+    cdf.iloc[:, 1:] = cdf.iloc[:, 1:].apply(lambda x: x.max() - x, axis=0)
+
+    # rename variables to match code example
+    values = sums.values.tolist()
+    weights = [cdf[column].values.tolist() for column in columns]
+    capacities = maxs.mul(100).values.tolist()
+
+    values = [int(x * 100) for x in values]
+    weights = [[int(x * 100) for x in xs] for xs in weights]
+    capacities = [int(x * 100) for x in capacities]
+
+    # solve
+    solver.Init(values, weights, capacities)
+    computed_value = solver.Solve()
+    optimal_tickers = [df.iloc[i].ticker for i in range(len(values)) if solver.BestSolutionContains(i)]
+
+
+    import pdb; pdb.set_trace()
 
     # Each possible investment is a variable
     ticker_variables = [solver.NumVar(0, solver.infinity(), row.ticker) for _, row in df.iterrows()]
     # Each factor is a variable
-    columns = df.columns.drop('ticker') # factors only
     factor_variables = [solver.NumVar(0, solver.infinity(), column) for column in columns]
 
     constraints = []
