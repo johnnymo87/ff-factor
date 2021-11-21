@@ -8,7 +8,7 @@ from patsy import dmatrices
 # Statsmodels to run our multiple regression model
 import statsmodels.api as sm
 
-from lib.linear_optimizer import optimize
+from lib.sharpe_ratio_solver import choose_best
 
 FIVE_FACTOR_FORMULA = """
 port_excess ~ market_minus_risk_free + small_minus_big + high_minus_low + robust_minus_weak + conservative_minus_aggressive
@@ -77,4 +77,4 @@ if __name__ == '__main__':
     # print('Write "import pdb; pdb.set_trace()" and run "python ."')
     # print(df.head())
 
-    optimize(df, investments.to_data_frame())
+    choose_best(df, investments.to_data_frame())

@@ -1,69 +1,8 @@
-# https://ftp.mcs.anl.gov/pub/tech_reports/reports/P602.pdf
-#
-# Food            | Cost/Serving | Vitamin A | Calories | Maximum Serving
-# Corn (C)        | $0.18        | 107       | 72       | 10
-# Milk (M)        | $0.23        | 500       | 121      | 10
-# Wheat Bread (W) | $0.05        | 0         | 65       | 10
-#
-# Nutrient       | Minimum amount in diet | Maximum amount in diet
-# Calories (Cal) | 2000                   | 2250
-# Vitamin A (VA) | 5000                   | 50000
-#
-# x[food] = amount of food to eat
-# c[food] = cost of 1 serving of food
-# A[food] = amount of vitamin A in 1 serving of food
-# Cal[food] = amount of calories in 1 serving of food
-# MinF[food] = minimum number of servings of food
-# MaxF[food] = maximum number of servings of food
-# MinN[food] = minimum amount of nutrient required
-# MaxN[food] = maximum amount of nutrient required
-#
-# Solve for x[food]
-#
-# Minimize              cost[C] * x[C] + cost[M] * x[M] + cost[W] * x[W]
-# Subject to MinN[VA]  ≤ A[C] * x[C]   + A[M] * x[M]    + A[W] * x[W]   ≤ MaxN[VA]
-#            MinN[Cal] ≤ Cal[C] * x[C] + Cal[M] * x[M]  + Cal[W] * x[W] ≤ MaxN[VA]
-#            MinF[C]   ≤                   x[C]                         ≤ MaxF[C]
-#            MinF[M]   ≤                   x[M]                         ≤ MaxF[M]
-#            MinF[W]   ≤                   x[W]                         ≤ MaxF[W]
-
-# Ticker | cost | mmrf | smb | hml | rmw | cma
-# DGRS   | -38  | 91   | 83  | 26  | 34  | 22
-# FYT    | -70  | 111  | 99  | 44  | 44  | 0
-#
-# Factor | Min | Max
-# mmrf   | 0   | 111
-# smb    | 0   | 100
-# hml    | 0   | 100
-# rmw    | 0   | 100
-# cma    | 0   | 100
-#
-# qty[ticker] = quantity (percent) to buy of a given investment
-# cost[ticker] = cost of 1 percent of a given investment
-# mmrf[ticker] = amount of mmrf factor in 1 percent of a given investment
-# smb[ticker] = amount of smb factor in 1 percent of a given investment
-# hml[ticker] = amount of hml factor in 1 percent of a given investment
-# rmw[ticker] = amount of rmw factor in 1 percent of a given investment
-# cma[ticker] = amount of cma factor in 1 percent of a given investment
-# MinQty[ticker] = minimum quantity (percent) for a given investment
-# MaxQty[ticker] = maximum quantity (percent) for a given investment
-# MinF[factor] = minimum amount required of factor
-# MaxF[factor] = maximum amount required of factor
-#
-# Solve for qty[ticker]
-#
-# Minimize                  cost[DGRS] * qty[DGRS] + cost[FYT] * qty[FYT]
-# Subject to MinF[mmrf]   ≤ mmrf[DGRS] * qty[DGRS] + mmrf[FYT] * qty[FYT] ≤ MaxF[VA]
-#            MinF[smb]    ≤ smb[DGRS] * qty[DGRS] + smb[FYT] * qty[FYT] ≤ MaxF[smb]
-#            MinF[hml]    ≤ hml[DGRS] * qty[DGRS] + hml[FYT] * qty[FYT] ≤ MaxF[hml]
-#            MinF[rmw]    ≤ rmw[DGRS] * qty[DGRS] + rmw[FYT] * qty[FYT] ≤ MaxF[rmw]
-#            MinF[cma]    ≤ cma[DGRS] * qty[DGRS] + cma[FYT] * qty[FYT] ≤ MaxF[cma]
-#            MinQty[DGRS] ≤                   qty[DGRS]                 ≤ MaxQty[DGRS]
-#            MinQty[FYT]  ≤                   qty[FYT]                  ≤ MaxQty[FYT]
-
-# https://developers.google.com/optimization/lp/glop#python_data
+from itertools import permutations
+import matplotlib.pyplot as plt
 import pandas as pd
-from ortools.algorithms import pywrapknapsack_solver
+import seaborn as sns
+from sklearn import preprocessing
 
 def optimize(factors, investments):
     renamed = {
@@ -76,35 +15,86 @@ def optimize(factors, investments):
         pivot(index='ticker', columns='factor', values='coef').\
         rename(columns=renamed).\
         fillna(0)
-    # investments = investments[['ticker', 'expense_ratio', 'dividend_yield']]
-    # investments.expense_ratio = investments.expense_ratio.transform(lambda x: -x)
-    # investments.dividend_yield = investments.dividend_yield.transform(lambda x: -x)
+    investments = investments[['ticker', 'expense_ratio', 'dividend_yield']]
     # df = pd.merge(factors, investments, on='ticker')
     df = factors
     df = df.reset_index()
     df = df.sort_values(by=['ticker'], ascending=False)
+    df = df.merge(investments, on='ticker')
 
-    columns = df.columns.drop('ticker') # factors only
+    EXPENSE_RATIO_MAX = 0.4
+    SMB_MAX, HML_MAX, RMW_MAX, CMA_MAX = 1, 0.55, 0.6, 0.22
+    # df = df[(df.expense_ratio <= EXPENSE_RATIO_MAX)]
 
-    # Available solvers:
-    # KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER
-    # KNAPSACK_MULTIDIMENSION_CBC_MIP_SOLVER
-    # KNAPSACK_MULTIDIMENSION_SCIP_MIP_SOLVER
-    solver = pywrapknapsack_solver.KnapsackSolver(
-        pywrapknapsack_solver.KnapsackSolver.
-        KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER, 'FFFactorKnapsackSolver')
+
+    factor_columns = list(set(df.columns) & set(renamed.values()))
+
 
 
     # data frame with normalized factor exposures
     # ndf = df.copy(deep=True)
     # ndf.iloc[:, 1:] = ndf.iloc[:, 1:].apply(lambda x: (x - x.mean()) / x.std(), axis=0)
 
-    sums = df[columns].sum(axis=1) # sum of all factors for each ticker
-    maxs = df[columns].max()       # max of each type of factor
+    # profits = df[factor_columns].sum(axis=1) # sum of all factors for each ticker
+    # maxs = df[factor_columns].max()       # max of each type of factor
 
     # data frame of "max minus my" exposures, to capture opportunity cost
-    cdf = df.copy(deep=True)
-    cdf.iloc[:, 1:] = cdf.iloc[:, 1:].apply(lambda x: x.max() - x, axis=0)
+    # cdf = df.copy(deep=True)
+    # cdf.loc[:, factor_columns] = cdf.loc[:, factor_columns].apply(lambda x: x.max() - x, axis=0)
+    # costs = cdf[factor_columns].sum(axis=1)
+    # df['profit'] = profits
+    # df['cost'] = costs
+    # df['efficiency'] = sums.div(df.expense_ratio)
+
+    # normalize the factor columns on a scale of 0 to 1
+    min_max_scaler = preprocessing.MinMaxScaler()
+    pd.DataFrame(min_max_scaler.fit_transform(df[factor_columns]), columns=factor_columns, index=df.index)
+
+    df['profit'] = df[factor_columns].sum(axis=1) # sum of all factors for each ticker
+    df['efficiency'] = df.profit.div(df.expense_ratio)
+    df['stddev'] = df[factor_columns].std(axis=1)
+
+    for left, right in permutations(factor_columns, 2):
+        fig = sns.lmplot(x=left, y=right, data=df[[left, right]], fit_reg=True)
+        plt.savefig(f'plots/{left}-{right}.png')
+        plt.close()
+
+    fig = sns.lmplot(x='expense_ratio', y='profit', data=df[['expense_ratio', 'profit']], fit_reg=True)
+    plt.savefig(f'plots/cost_efficiency.png')
+    plt.close()
+
+    fig = sns.lmplot(x='stddev', y='profit', data=df[['stddev', 'profit']], fit_reg=True)
+    plt.savefig(f'plots/stddev-profit.png')
+    plt.close()
+
+    opportunity_costs = df.loc[:, factor_columns].apply(lambda x: x.max() - x, axis=0)
+    # sac = df[['ticker']].join(opportunity_costs.sum(axis=1).rename('factor_sacrifice')).merge(investments, on='ticker')
+
+    for factor_column in factor_columns:
+        # fig = sns.lmplot(x=factor_column, y='expense_ratio', data=df, fit_reg=True)
+        # plt.savefig(f'plots/{factor_column}_cost_efficiency.png')
+        # plt.close()
+
+        other_factor_columns = (set(factor_columns) - set(factor_column))
+        sacrifice = opportunity_costs[other_factor_columns].sum(axis=1).rename('sacrifice')
+        fig = sns.lmplot(x=factor_column, y='sacrifice', data=df.join(sacrifice), fit_reg=True)
+        plt.savefig(f'plots/{factor_column}-sacrifice.png')
+        plt.close()
+
+        # Efficiency: High score means it sacrifices other factors LESS
+        # df[f'{factor_column}_eff'] = df[factor_column].div(sacrifice)
+
+    import pdb; pdb.set_trace()
+    # for factor_column in factor_columns:
+    #     for other_factor_column in (set(factor_columns) - set(factor_column)):
+    #         df[f'{other_factor_column}_opportunity_cost'] = maxs.minus(df[other_factor_column])
+
+        # df[f'{factor_column}_opportunity_cost'] = maxs.minus(df[factor_column])
+        # cdf.loc[:, factor_columns] = cdf.loc[:, factor_columns].apply(lambda x: x.max() - x, axis=0)
+        # per factor
+        # sum of opportunity cost of each of the other factors
+        # df[f'{factor_column}_cost'] = cdf.profit.minus(cdf[factor_column])
+    # cdf.loc[:, columns] = cdf.loc[:, columns].apply(lambda x: 0 if x == 0 else x.profit / x, axis=0)
 
     # rename variables to match code example
     values = sums.values.tolist()

@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=-
 #
-absl-py==0.11.0
+absl-py==0.12.0
     # via ortools
 certifi==2020.12.5
     # via requests
@@ -14,22 +14,28 @@ cycler==0.10.0
     # via matplotlib
 idna==2.10
     # via requests
+joblib==1.0.1
+    # via scikit-learn
 kiwisolver==1.3.1
     # via matplotlib
-lxml==4.6.2
+lxml==4.6.3
     # via
     #   pandas-datareader
     #   yfinance
 matplotlib==3.3.3
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   seaborn
 multitasking==0.0.9
     # via yfinance
-numpy==1.20.0
+numpy==1.20.2
     # via
     #   matplotlib
     #   pandas
     #   patsy
+    #   scikit-learn
     #   scipy
+    #   seaborn
     #   statsmodels
     #   yfinance
 ortools==8.1.8487
@@ -40,15 +46,16 @@ pandas==1.1.4
     # via
     #   -r requirements.in
     #   pandas-datareader
+    #   seaborn
     #   statsmodels
     #   yfinance
 patsy==0.5.1
     # via
     #   -r requirements.in
     #   statsmodels
-pillow==8.1.0
+pillow==8.2.0
     # via matplotlib
-protobuf==3.14.0
+protobuf==3.15.8
     # via ortools
 psycopg2==2.8.6
     # via -r requirements.in
@@ -65,8 +72,15 @@ requests==2.25.1
     # via
     #   pandas-datareader
     #   yfinance
-scipy==1.6.0
-    # via statsmodels
+scikit-learn==0.24.1
+    # via -r requirements.in
+scipy==1.6.3
+    # via
+    #   scikit-learn
+    #   seaborn
+    #   statsmodels
+seaborn==0.11.1
+    # via -r requirements.in
 six==1.15.0
     # via
     #   absl-py
@@ -82,7 +96,9 @@ sqlalchemy==1.3.20
     #   sqlalchemy-repr
 statsmodels==0.12.1
     # via -r requirements.in
-urllib3==1.26.3
+threadpoolctl==2.1.0
+    # via scikit-learn
+urllib3==1.26.4
     # via requests
 git+https://github.com/johnnymo87/yfinance.git@220a20ce3ac95632ab2dbe371e71c4dfeb09a9bb
     # via -r requirements.in
