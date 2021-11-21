@@ -100,5 +100,5 @@ threadpoolctl==2.1.0
     # via scikit-learn
 urllib3==1.26.4
     # via requests
-git+https://github.com/johnnymo87/yfinance.git@220a20ce3ac95632ab2dbe371e71c4dfeb09a9bb
+git+https://github.com/johnnymo87/yfinance.git@793b40753410578676b3d570ec21663957c75a59
     # via -r requirements.in
