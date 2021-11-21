@@ -71,7 +71,7 @@ if __name__ == '__main__':
     # df = df[~df.factor.isin(['market_minus_risk_free'])]
 
     # Exclude statistically insignificant results
-    df = df[df.pvalue <= 0.2]
+    df = df[df.pvalue <= 0.05]
 
     # print('Consider catching a debugger here to play with the data frames')
     # print('Write "import pdb; pdb.set_trace()" and run "python ."')
