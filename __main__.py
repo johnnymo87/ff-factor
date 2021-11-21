@@ -19,8 +19,8 @@ if __name__ == '__main__':
 
     # Get the French-Fama Data
     ff_data = FactorReturns.fetch(market_type)
-    ff_starts_at = ff_data.occurred_at[0]
-    ff_ends_at = ff_data.occurred_at[len(ff_data.occurred_at) - 1]
+    ff_starts_at = ff_data.occurred_at.min()
+    ff_ends_at = ff_data.occurred_at.max()
 
     # Get the investments to study
     Investments().backfill_facts(market_type)
