@@ -29,7 +29,7 @@ if __name__ == '__main__':
     results = {}
     for investment in investments:
         ticker_symbol = investment.ticker_symbol
-        print(f'Analyzing {ticker_symbol}')
+        # print(f'Analyzing {ticker_symbol}')
         try:
             # Get the returns of the investment
             ticker_data = InvestmentReturns.fetch(ticker_symbol, ff_starts_at, ff_ends_at)
