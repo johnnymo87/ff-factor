@@ -68,7 +68,7 @@ if __name__ == '__main__':
     # Exclude 'Intercept' because it almost always very close to zero
     df = df[~df.factor.isin(['Intercept'])]
     # Exclude 'market_minus_risk_free' because it usually close to one
-    df = df[~df.factor.isin(['market_minus_risk_free'])]
+    # df = df[~df.factor.isin(['market_minus_risk_free'])]
 
     # Exclude statistically insignificant results
     df = df[df.pvalue <= 0.2]
