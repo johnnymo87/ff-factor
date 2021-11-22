@@ -25,7 +25,7 @@ if __name__ == '__main__':
     ff_ends_at = ff_data.occurred_at.max()
 
     # Get the investments to study
-    Investments().backfill_facts(market_type)
+    # Investments().backfill_facts(market_type)
     investments = Investments().query.for_analysis(market_type, ff_ends_at)
 
     results = {}
