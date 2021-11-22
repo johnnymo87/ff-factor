@@ -9,13 +9,13 @@ from scipy import optimize
 
 def choose_best(df):
     if df.shape[0] == 0:
-        raise ValueError('Dataframe is empty')
+        raise ValueError('DataFrame is empty')
 
     relevant_columns = ['smb', 'hml', 'rmw', 'cma']
     # relevant_columns = ['smb', 'hml', 'rmw', 'cma', 'expense_ratio', 'dividend_yield']
     # relevant_columns = ['mmrf', 'smb', 'hml', 'rmw', 'cma', 'expense_ratio', 'dividend_yield']
     if len(set(df.columns) & set(relevant_columns)) != len(relevant_columns):
-        raise ValueError(f'Dataframe columns ({",".join(df.columns)}) does not contain all relevant columns ({",".join(relevant_columns)})')
+        raise ValueError(f'DataFrame columns ({",".join(df.columns)}) does not contain all relevant columns ({",".join(relevant_columns)})')
 
     # Compute the mean and variance-covariance matrix
     factors = np.asarray(df[relevant_columns])
@@ -31,8 +31,13 @@ def choose_best(df):
 
     df['allocation'] = np.round(result.x, 3)
     chosen = df[(df.allocation > 0)]
-    print("\nBest ratio of total factor value to minimum factor variance:\n")
-    print(chosen)
+    ratio = chosen[relevant_columns].\
+        agg(lambda x: x.mean() / x.std(), axis='columns').\
+        multiply(chosen.allocation, axis='index').\
+        sum().\
+        round(3)
+    print(f"\nBest ratio of total factor value to minimum factor variance: {ratio}\n")
+    print(chosen.round(3))
 
 def maximize_sharpe_ratio(factor_means, factor_var_covar_matrix):
 
