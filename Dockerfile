@@ -1,5 +1,5 @@
 # Base image
-FROM python:3.9-buster AS base
+FROM python:3.10-bullseye AS base
 
 ENV PYTHONPATH=.
 
