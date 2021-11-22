@@ -16,6 +16,8 @@ port_excess ~ market_minus_risk_free + small_minus_big + high_minus_low + robust
 
 if __name__ == '__main__':
     market_type = 'US'
+    # market_type = 'Developed ex US'
+    # market_type = 'Emerging'
 
     # Get the French-Fama Data
     ff_data = FactorReturns.fetch(market_type)
@@ -73,8 +75,33 @@ if __name__ == '__main__':
     # Exclude statistically insignificant results
     df = df[df.pvalue <= 0.05]
 
+    renamed = {
+        'market_minus_risk_free': 'mmrf',
+        'small_minus_big': 'smb',
+        'high_minus_low': 'hml',
+        'robust_minus_weak': 'rmw',
+        'conservative_minus_aggressive': 'cma'}
+    df = df[['ticker', 'factor', 'coef']].\
+        pivot(index='ticker', columns='factor', values='coef').\
+        rename(columns=renamed)
+    df = df.reset_index() # Make index integers rather than ticker
+
+    investments_df = investments.to_data_frame()[['ticker', 'expense_ratio', 'dividend_yield']]
+    # Throw out funds missing their expense ratio
+    investments_df = investments_df[investments_df.expense_ratio.notna()]
+    # Throw out funds that are too expensive
+    investments_df = investments_df[(investments_df.expense_ratio <= 0.4)]
+
+    df = df.merge(investments_df, on='ticker')
+
+    # Replacing all NaNs with zero. This isn't perfect because:
+    # * Factors with just barely insignificant p-values will be zero, when in
+    #   fact they might be negative.
+    # * Dividend yield that are missing in the API will appear as zero.
+    df = df.fillna(0)
+
     # print('Consider catching a debugger here to play with the data frames')
     # print('Write "import pdb; pdb.set_trace()" and run "python ."')
     # print(df.head())
 
-    choose_best(df, investments.to_data_frame())
+    choose_best(df)

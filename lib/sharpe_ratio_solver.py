@@ -7,32 +7,18 @@
 import numpy as np
 from scipy import optimize
 
-def choose_best(factors, investments):
-    renamed = {
-        'market_minus_risk_free': 'mmrf',
-        'small_minus_big': 'smb',
-        'high_minus_low': 'hml',
-        'robust_minus_weak': 'rmw',
-        'conservative_minus_aggressive': 'cma'}
-    factors = factors[['ticker', 'factor', 'coef']].\
-        pivot(index='ticker', columns='factor', values='coef').\
-        rename(columns=renamed).\
-        fillna(0)
-    other_columns = ['ticker', 'expense_ratio', 'dividend_yield']
-    investments = investments[other_columns]
-    # df = pd.merge(factors, investments, on='ticker')
-    df = factors
-    df = df.reset_index()
-    df = df.sort_values(by=['ticker'], ascending=False)
-    df = df.merge(investments, on='ticker')
+def choose_best(df):
+    if df.shape[0] == 0:
+        raise ValueError('Dataframe is empty')
 
-    EXPENSE_RATIO_MAX = 0.4
-    df = df[(df.expense_ratio <= EXPENSE_RATIO_MAX)]
-
-    factor_columns = list(set(df.columns) & set(renamed.values()))
+    relevant_columns = ['smb', 'hml', 'rmw', 'cma']
+    # relevant_columns = ['smb', 'hml', 'rmw', 'cma', 'expense_ratio', 'dividend_yield']
+    # relevant_columns = ['mmrf', 'smb', 'hml', 'rmw', 'cma', 'expense_ratio', 'dividend_yield']
+    if len(set(df.columns) & set(relevant_columns)) != len(relevant_columns):
+        raise ValueError(f'Dataframe columns ({",".join(df.columns)}) does not contain all relevant columns ({",".join(relevant_columns)})')
 
     # Compute the mean and variance-covariance matrix
-    factors = np.asarray(df[factor_columns])
+    factors = np.asarray(df[relevant_columns])
     factor_means = np.mean(factors, axis = 1)
     # https://numpy.org/doc/stable/reference/generated/numpy.cov.html
     # Bias true because I don't want to exclude one of my "observations" (factors)
@@ -40,6 +26,8 @@ def choose_best(factors, investments):
 
     # Compute maximal Sharpe Ratio and optimal weights
     result = maximize_sharpe_ratio(factor_means, factor_var_covar_matrix)
+    if not result.success:
+        raise ValueError(result.message)
 
     df['allocation'] = np.round(result.x, 3)
     chosen = df[(df.allocation > 0)]
