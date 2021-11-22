@@ -3,4 +3,5 @@
 downloads/*
 plots/*
 secrets.env
+script/db.dump
 !/**/.gitkeep
