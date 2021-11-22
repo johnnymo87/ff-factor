@@ -11,11 +11,18 @@ def choose_best(df):
     if df.shape[0] == 0:
         raise ValueError('DataFrame is empty')
 
-    relevant_columns = ['smb', 'hml', 'rmw', 'cma']
+    # relevant_columns = ['smb', 'hml', 'rmw', 'cma']
     # relevant_columns = ['smb', 'hml', 'rmw', 'cma', 'expense_ratio', 'dividend_yield']
     # relevant_columns = ['mmrf', 'smb', 'hml', 'rmw', 'cma', 'expense_ratio', 'dividend_yield']
+    # relevant_columns = ['smb', 'hml', 'rmw', 'cma', 'expense_ratio', 'dividend_yield']
+    relevant_columns = ['smb', 'hml', 'rmw', 'cma', 'expense_ratio']
     if len(set(df.columns) & set(relevant_columns)) != len(relevant_columns):
         raise ValueError(f'DataFrame columns ({",".join(df.columns)}) does not contain all relevant columns ({",".join(relevant_columns)})')
+
+    # Just in case I want to optimize these columns, negate them because I will
+    # want to minimize them.
+    df.loc[:, ['expense_ratio', 'dividend_yield']] = \
+        df.loc[:, ['expense_ratio', 'dividend_yield']].apply(lambda x: -x, axis='columns')
 
     # Compute the mean and variance-covariance matrix
     factors = np.asarray(df[relevant_columns])
@@ -30,13 +37,20 @@ def choose_best(df):
         raise ValueError(result.message)
 
     df['allocation'] = np.round(result.x, 3)
+
     chosen = df[(df.allocation > 0)]
     ratio = chosen[relevant_columns].\
         agg(lambda x: x.mean() / x.std(), axis='columns').\
         multiply(chosen.allocation, axis='index').\
         sum().\
         round(3)
-    print(f"\nBest ratio of total factor value to minimum factor variance: {ratio}\n")
+
+    # Un-negate these columns for presentation purposes
+    chosen.loc[:, ['expense_ratio', 'dividend_yield']] = \
+        chosen.loc[:, ['expense_ratio', 'dividend_yield']].apply(lambda x: -x, axis='columns')
+
+    print(f"\nFactors considered: {', '.join(relevant_columns)}")
+    print(f"Choices that best maximizes average factor value while minimizing factor variance, at a ratio of {ratio}\n")
     print(chosen.round(3))
 
 def maximize_sharpe_ratio(factor_means, factor_var_covar_matrix):

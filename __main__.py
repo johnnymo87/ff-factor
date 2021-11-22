@@ -91,8 +91,6 @@ if __name__ == '__main__':
     investments_df = investments.to_data_frame()[['ticker', 'expense_ratio', 'dividend_yield']]
     # Throw out funds missing their expense ratio
     investments_df = investments_df[investments_df.expense_ratio.notna()]
-    # Throw out funds that are too expensive
-    investments_df = investments_df[(investments_df.expense_ratio <= 0.4)]
 
     df = df.merge(investments_df, on='ticker')
 
