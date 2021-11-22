@@ -42,14 +42,17 @@ class InvestmentReturns:
         return data
 
     @staticmethod
-    def fetch(ticker_symbol, start, end):
+    def backfill_returns(ticker_symbol, start, end):
         """
+        Looks for investment returns for the ticker between the given start and
+        end date. If some are present, checks the last time it was backfilled
+        to see if there is a gap. If so, backfills either of these gaps. If none
+        are present, backfills starting with the given start date.
         @param [string] ticker_symbol Ticker symbol of the stock
         @param [Date] start Start date of the range (inclusive) of desired data
         @param [Date] end End date of the range (inclusive) of desired data
         @raise [pandas_datareader._utils.RemoteDataError] If Yahoo API response is not 200
         @raise [requests.exceptions.ConnectionError] If unable to connect to the Yahoo API
-        @return [pandas.core.frame.DataFrame]
         """
         session = Session()
         query = session.query(InvestmentReturn).\
@@ -72,4 +75,20 @@ class InvestmentReturns:
             percentage_change_data = InvestmentReturns.get_percentage_change_data(ticker_symbol, start, end)
             session.add_all([InvestmentReturn(**row) for _, row in percentage_change_data.iterrows()])
             session.commit()
+
+    @staticmethod
+    def fetch(ticker_symbol, start, end):
+        """
+        @param [string] ticker_symbol Ticker symbol of the stock
+        @param [Date] start Start date of the range (inclusive) of desired data
+        @param [Date] end End date of the range (inclusive) of desired data
+        @raise [pandas_datareader._utils.RemoteDataError] If Yahoo API response is not 200
+        @raise [requests.exceptions.ConnectionError] If unable to connect to the Yahoo API
+        @return [pandas.core.frame.DataFrame]
+        """
+        session = Session()
+        query = session.query(InvestmentReturn).\
+            filter(InvestmentReturn.ticker_symbol == ticker_symbol).\
+            filter(InvestmentReturn.occurred_at >= start).\
+            filter(InvestmentReturn.occurred_at <= end)
         return pd.read_sql(query.statement, query.session.bind)
