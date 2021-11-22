@@ -1,11 +1,13 @@
 from calendar import monthrange
 from datetime import date
+from datetime import timedelta
 from db.db import Session
 from db.investment_return import InvestmentReturn
 # Pandas to read sql into a dataframe
 import pandas as pd
 # Datareader to download price data from the Yahoo API
 import pandas_datareader as web
+from sqlalchemy.sql import func
 import time
 
 class InvestmentReturns:
@@ -54,7 +56,15 @@ class InvestmentReturns:
             filter(InvestmentReturn.ticker_symbol == ticker_symbol).\
             filter(InvestmentReturn.occurred_at >= start).\
             filter(InvestmentReturn.occurred_at <= end)
-        if not session.query(query.exists()).scalar():
+        if session.query(query.exists()).scalar():
+            max_occurred_at = session.query(func.max(InvestmentReturn.occurred_at)).filter(InvestmentReturn.ticker_symbol == ticker_symbol).scalar()
+            if max_occurred_at < end:
+                new_start = max_occurred_at + timedelta(days=1)
+                print(f'Ticker price data for ({ticker_symbol}, {new_start}, {end}) not found in the DB, backfilling it from the Yahoo API')
+                percentage_change_data = InvestmentReturns.get_percentage_change_data(ticker_symbol, new_start, end)
+                session.add_all([InvestmentReturn(**row) for _, row in percentage_change_data.iterrows()])
+                session.commit()
+        else:
             print(f'Ticker price data for ({ticker_symbol}, {start}, {end}) not found in the DB, backfilling it from the Yahoo API')
             this_year, last_month = date.today().year, date.today().month - 1
             _, last_day = monthrange(this_year, last_month)
