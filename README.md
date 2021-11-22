@@ -6,7 +6,8 @@ After reading [The Incredible Shrinking Alpha 2nd edition: How to be a successfu
 
 This application combines the following data sources:
 * Factor return data from [Ken French's data library](http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html)
-* Investment return data from the Yahoo Finance API
+* Investment metadata and return data from the Yahoo Finance API
+  * With some help on the metadata from the Seeking Alpha API
 * Ticker symbols by market types (`US`, `Developed ex US`, and `Emerging`) found with the help of [Fidelity's ETF screener](https://research2.fidelity.com/pi/etf-screener)
   * I look for ETFs of equity funds that are not leveraged or inverse, are not thematic, and have the country exposure appropriate for their market type
 
@@ -19,6 +20,11 @@ Since exactly how to choose the "best" fund is complicated, this application doe
 This application uses [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/) and run.
 
 
+* Make a `secrets.env` file based on the template `secrets.env.example`
+  ```sh
+  cp secrets.env.example secrets.env
+  ```
+* Fill out the `secrets.env` file
 * Build the application's image
   ```sh
   docker-compose build

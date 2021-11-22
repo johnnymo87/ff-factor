@@ -35,9 +35,11 @@ class InvestmentQuery(Query):
         dividend yield, AND their inception date
         """
         return self.\
-            filter(Investment.dividend_yield == None).\
-            filter(Investment.expense_ratio == None).\
-            filter(Investment.inception_date == None)
+            filter(
+                (Investment.dividend_yield == None) | \
+                (Investment.expense_ratio == None) | \
+                (Investment.inception_date == None)
+            )
 
     def update_by_ticker_symbol(self, ticker_symbol, values):
         """
@@ -59,6 +61,4 @@ class InvestmentQuery(Query):
             self.session.bind
         )[['ticker_symbol', 'dividend_yield', 'expense_ratio', 'inception_date']]
         df = df.rename(columns={ 'ticker_symbol': 'ticker' })
-        df['dividend_yield'] = df['dividend_yield'].apply(lambda x: x * 100)
-        df['expense_ratio'] = df['expense_ratio'].apply(lambda x: x * 100)
         return df

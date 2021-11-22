@@ -5,6 +5,7 @@ services:
     build:
       context: .
       target: release
+    env_file: secrets.env
     volumes:
       - .:/app
     command: sleep infinity
