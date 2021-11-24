@@ -27,29 +27,28 @@ if __name__ == '__main__':
     # Investments().backfill_facts(market_type)
     investments = Investments().query.for_analysis(market_type, ff_ends_at)
     # for investment in investments:
-    #     InvestmentReturns.backfill_returns(investment.ticker_symbol, ff_starts_at, ff_ends_at)
+    #     try:
+    #         InvestmentReturns.backfill_returns(investment.ticker_symbol, ff_starts_at, ff_ends_at)
+    #     except KeyError as e:
+    #         print(f'Skipping {investment.ticker_symbol} due to lack of Yahoo API response')
 
     results = {}
     for investment in investments:
         ticker_symbol = investment.ticker_symbol
         # print(f'Analyzing {ticker_symbol}')
-        try:
-            # Get the returns of the investment
-            ticker_data = InvestmentReturns.fetch(ticker_symbol, ff_starts_at, ff_ends_at)
-            if len(ticker_data) < 12:
-                print(f'Less than 12 months of data, skipping {ticker_symbol}!')
-                continue
+        # Get the returns of the investment
+        ticker_data = InvestmentReturns.fetch(ticker_symbol, ff_starts_at, ff_ends_at)
+        if len(ticker_data) < 12:
+            print(f'Less than 12 months of data, skipping {ticker_symbol}!')
+            continue
 
-            # Join the FF and investment returns data
-            all_data = pd.merge(ticker_data, ff_data, on='occurred_at')
-            all_data['port_excess'] = all_data.percentage_change - all_data.risk_free
+        # Join the FF and investment returns data
+        all_data = pd.merge(ticker_data, ff_data, on='occurred_at')
+        all_data['port_excess'] = all_data.percentage_change - all_data.risk_free
 
-            # Run OLS regression
-            endogenous, exogenous = dmatrices(FIVE_FACTOR_FORMULA, data=all_data, return_type='dataframe')
-            results[ticker_symbol] = sm.OLS(endogenous, exogenous).fit()
-
-        except KeyError as e:
-            print(f'Skipping {ticker_symbol} due to lack of Yahoo API response')
+        # Run OLS regression
+        endogenous, exogenous = dmatrices(FIVE_FACTOR_FORMULA, data=all_data, return_type='dataframe')
+        results[ticker_symbol] = sm.OLS(endogenous, exogenous).fit()
 
     dfs = []
     for ticker, result in results.items():
