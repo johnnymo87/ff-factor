@@ -1,28 +1,20 @@
+import numpy as np
+from scipy import optimize
+
 # I want to choose a combination of funds that are both high in factors and
 # close to equal as possible in all factors. This idea is similar to the idea
 # of the Sharpe ratio, which is the ratio between mean returns and standard
 # deviation.
 # https://www.kaggle.com/vijipai/lesson-6-sharpe-ratio-based-portfolio-optimization
 
-import numpy as np
-from scipy import optimize
-
 def choose_best(df):
-    if df.shape[0] == 0:
-        raise ValueError('DataFrame is empty')
+    if df.shape[0] <= 1:
+        print(f'DataFrame is too small ({df.shape[0]}), skipping')
+        return (0, 0, 0)
 
-    # relevant_columns = ['smb', 'hml', 'rmw', 'cma']
-    # relevant_columns = ['smb', 'hml', 'rmw', 'cma', 'expense_ratio', 'dividend_yield']
-    # relevant_columns = ['mmrf', 'smb', 'hml', 'rmw', 'cma', 'expense_ratio', 'dividend_yield']
-    # relevant_columns = ['smb', 'hml', 'rmw', 'cma', 'expense_ratio', 'dividend_yield']
-    relevant_columns = ['smb', 'hml', 'rmw', 'cma', 'expense_ratio']
+    relevant_columns = ['smb', 'hml', 'rmw', 'cma']
     if len(set(df.columns) & set(relevant_columns)) != len(relevant_columns):
         raise ValueError(f'DataFrame columns ({",".join(df.columns)}) does not contain all relevant columns ({",".join(relevant_columns)})')
-
-    # Just in case I want to optimize these columns, negate them because I will
-    # want to minimize them.
-    df.loc[:, ['expense_ratio', 'dividend_yield']] = \
-        df.loc[:, ['expense_ratio', 'dividend_yield']].apply(lambda x: -x, axis='columns')
 
     # Compute the mean and variance-covariance matrix
     factors = np.asarray(df[relevant_columns])
@@ -39,19 +31,30 @@ def choose_best(df):
     df['allocation'] = np.round(result.x, 3)
 
     chosen = df[(df.allocation > 0)]
-    ratio = chosen[relevant_columns].\
-        agg(lambda x: x.mean() / x.std(), axis='columns').\
+    mean = chosen[relevant_columns].\
+        agg(lambda x: x.mean(), axis='columns').\
         multiply(chosen.allocation, axis='index').\
         sum().\
         round(3)
+    stdev = chosen[relevant_columns].\
+        agg(lambda x: x.std(), axis='columns').\
+        multiply(chosen.allocation, axis='index').\
+        sum().\
+        round(3)
+    ratio = mean / stdev
+    chosen = chosen.append(
+        chosen[['mmrf', 'smb', 'hml', 'rmw', 'cma', 'expense_ratio', 'dividend_yield']].\
+            multiply(chosen.allocation, axis='index').\
+            sum(),
+        ignore_index=True
+    )
 
-    # Un-negate these columns for presentation purposes
-    chosen.loc[:, ['expense_ratio', 'dividend_yield']] = \
-        chosen.loc[:, ['expense_ratio', 'dividend_yield']].apply(lambda x: -x, axis='columns')
-
-    print(f"\nFactors considered: {', '.join(relevant_columns)}")
-    print(f"Choices that best maximizes average factor value while minimizing factor variance, at a ratio of {ratio}\n")
+    print(f"Factors considered: {', '.join(relevant_columns)}\n")
+    print(f"Mean: {round(mean, 3)}, StDev: {round(stdev, 3)}, Ratio: {round(ratio, 3)}")
+    print(f"Choices that best this ratio\n")
     print(chosen.round(3))
+
+    return (mean, stdev, ratio)
 
 def maximize_sharpe_ratio(factor_means, factor_var_covar_matrix):
 

@@ -1,3 +1,4 @@
+from lib.experiment_with_expense_ratios import experiment_with_expense_ratios
 from lib.factor_returns import FactorReturns
 from lib.investment_returns import InvestmentReturns
 from lib.investments import Investments
@@ -7,8 +8,6 @@ import pandas as pd
 from patsy import dmatrices
 # Statsmodels to run our multiple regression model
 import statsmodels.api as sm
-
-from lib.sharpe_ratio_solver import choose_best
 
 FIVE_FACTOR_FORMULA = """
 port_excess ~ market_minus_risk_free + small_minus_big + high_minus_low + robust_minus_weak + conservative_minus_aggressive
@@ -89,8 +88,9 @@ if __name__ == '__main__':
     df = df.reset_index() # Make index integers rather than ticker
 
     investments_df = investments.to_data_frame()[['ticker', 'expense_ratio', 'dividend_yield']]
+    investments_df = investments_df.fillna(0)
     # Throw out funds missing their expense ratio
-    investments_df = investments_df[investments_df.expense_ratio.notna()]
+    investments_df = investments_df[investments_df.expense_ratio > 0]
 
     df = df.merge(investments_df, on='ticker')
 
@@ -100,8 +100,11 @@ if __name__ == '__main__':
     # * Dividend yield that are missing in the API will appear as zero.
     df = df.fillna(0)
 
+    # Reorder columns
+    df = df.filter(['ticker', 'mmrf', 'smb', 'hml', 'rmw', 'cma', 'expense_ratio', 'dividend_yield'])
+
     # print('Consider catching a debugger here to play with the data frames')
     # print('Write "import pdb; pdb.set_trace()" and run "python ."')
     # print(df.head())
 
-    choose_best(df)
+    experiment_with_expense_ratios(df, market_type)
