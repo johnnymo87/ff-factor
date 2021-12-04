@@ -8,7 +8,7 @@ from scipy import optimize
 # deviation.
 # https://www.kaggle.com/vijipai/lesson-6-sharpe-ratio-based-portfolio-optimization
 
-def choose_best(df, weights_and_biases={}):
+def choose_best(df):
     if df.shape[0] <= 1:
         print(f'DataFrame is too small ({df.shape[0]}), skipping')
         return (0, 0, 0)
@@ -25,45 +25,16 @@ def choose_best(df, weights_and_biases={}):
     factor_var_covar_matrix = np.cov(factors, bias=True)
 
     # Compute maximal Sharpe Ratio and optimal weights
-    result = maximize_sharpe_ratio(factor_means, factor_var_covar_matrix, weights_and_biases)
+    result = maximize_sharpe_ratio(factor_means, factor_var_covar_matrix)
     if not result.success:
         raise ValueError(result.message)
 
     df['allocation'] = np.round(result.x, 3)
 
     chosen = df[(df.allocation > 0)].sort_values(by=['allocation'], ascending=False)
-    # mean = chosen[relevant_columns].\
-    #     multiply(chosen.allocation, axis='index').\
-    #     sum().\
-    #     mean().\
-    #     round(3)
-    # stdev = chosen[relevant_columns].\
-    #     multiply(chosen.allocation, axis='index').\
-    #     sum().\
-    #     std().\
-    #     round(3)
-    # ratio = mean / stdev
-    # chosen = chosen.append(
-    #     chosen[['mmrf', 'smb', 'hml', 'rmw', 'cma', 'expense_ratio', 'dividend_yield']].\
-    #         multiply(chosen.allocation, axis='index').\
-    #         sum(),
-    #     ignore_index=True
-    # )
-
-    # print(f"Factors considered: {', '.join(relevant_columns)}\n")
-    # print(f"Mean: {round(mean, 3)}, StDev: {round(stdev, 3)}, Ratio: {round(ratio, 3)}")
-    # print(f"Choices that best this ratio\n")
-    # print(chosen.round(3))
-
-    # return (mean, stdev, ratio, chosen)
     return ChosenSummarizer(chosen, relevant_columns)
 
-def maximize_sharpe_ratio(factor_means, factor_var_covar_matrix, weights_and_biases):
-    numerator_weight = weights_and_biases.get('numerator_weight', 1)
-    numerator_bias = weights_and_biases.get('numerator_bias', 0)
-    denominator_weight = weights_and_biases.get('denominator_weight', 1)
-    denominator_bias = weights_and_biases.get('denominator_bias', 0)
-
+def maximize_sharpe_ratio(factor_means, factor_var_covar_matrix):
     def objective_function(x, given_factor_means, given_factor_var_covar_matrix):
         standard_deviation = np.sqrt(
             np.matmul(
@@ -72,9 +43,11 @@ def maximize_sharpe_ratio(factor_means, factor_var_covar_matrix, weights_and_bia
             )
         )
         mean = np.matmul(np.array(given_factor_means), x.T)
+        # The Sharpe ratio doesn't normally have this "1 +" in the denominator,
+        # but I want to be less strict about standard deviation.
         # Since the optimizer minimizes and we want to maximize, we negate our
         # objective function.
-        return -(numerator_bias + numerator_weight * mean) / (denominator_bias + denominator_weight * standard_deviation)
+        return -mean / (1 + standard_deviation)
 
     # Enforce that all allocations sum to 1
     def equality_constraint(x):

@@ -1,8 +1,4 @@
-from lib.sharpe_ratio_solver import choose_best
-# from lib.experiment_with_biased_expense_ratios import experiment_with_biased_expense_ratios
-# from lib.experiment_with_expense_ratios import experiment_with_expense_ratios
 from lib.experiment_with_shuffling import experiment_with_shuffling
-# from lib.experiment_with_weights_and_biases import experiment_with_weights_and_biases
 from lib.factor_returns import FactorReturns
 from lib.investment_returns import InvestmentReturns
 from lib.investments import Investments
@@ -111,8 +107,3 @@ if __name__ == '__main__':
     # print(df.head())
 
     experiment_with_shuffling(df, market_type)
-    # experiment_with_biased_expense_ratios(df, market_type)
-    # experiment_with_weights_and_biases(df, market_type)
-    # experiment_with_expense_ratios(df, market_type)
-    # choose_best(df[df.expense_ratio <= 0.75])
-    # choose_best(df)
