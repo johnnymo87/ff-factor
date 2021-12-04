@@ -1,4 +1,8 @@
-from lib.experiment_with_expense_ratios import experiment_with_expense_ratios
+from lib.sharpe_ratio_solver import choose_best
+# from lib.experiment_with_biased_expense_ratios import experiment_with_biased_expense_ratios
+# from lib.experiment_with_expense_ratios import experiment_with_expense_ratios
+from lib.experiment_with_shuffling import experiment_with_shuffling
+# from lib.experiment_with_weights_and_biases import experiment_with_weights_and_biases
 from lib.factor_returns import FactorReturns
 from lib.investment_returns import InvestmentReturns
 from lib.investments import Investments
@@ -14,9 +18,9 @@ port_excess ~ market_minus_risk_free + small_minus_big + high_minus_low + robust
 """
 
 if __name__ == '__main__':
-    market_type = 'US'
+    # market_type = 'US'
     # market_type = 'Developed ex US'
-    # market_type = 'Emerging'
+    market_type = 'Emerging'
 
     # Get the French-Fama Data
     ff_data = FactorReturns.fetch(market_type)
@@ -106,4 +110,9 @@ if __name__ == '__main__':
     # print('Write "import pdb; pdb.set_trace()" and run "python ."')
     # print(df.head())
 
-    experiment_with_expense_ratios(df, market_type)
+    experiment_with_shuffling(df, market_type)
+    # experiment_with_biased_expense_ratios(df, market_type)
+    # experiment_with_weights_and_biases(df, market_type)
+    # experiment_with_expense_ratios(df, market_type)
+    # choose_best(df[df.expense_ratio <= 0.75])
+    # choose_best(df)
