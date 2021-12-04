@@ -2,18 +2,20 @@
 
 ## Background
 
-After reading [The Incredible Shrinking Alpha 2nd edition: How to be a successful investor without picking winners](https://www.amazon.com/gp/product/B08BX5HRLJ) and [Your Complete Guide to Factor-Based Investing: The Way Smart Money Invests Today](https://www.amazon.com/gp/product/B01N7FCW2D) by [Larry Swedroe](https://www.amazon.com/Larry-E-Swedroe/e/B000APJJ8O) and [Andrew Berkin](https://www.amazon.com/Andrew-L-Berkin/e/B01N303388), I decided that I needed a way to find investments with exposure to ["factors"](https://en.wikipedia.org/wiki/Factor_investing). The factors I am searching for are the unique set of factors found in the [Fama French five factor model](https://en.wikipedia.org/wiki/Fama%E2%80%93French_three-factor_model) and the [Carhart four factor model](https://en.wikipedia.org/wiki/Carhart_four-factor_model): (1) market risk, (2) small caps, (3) stocks with a high book-to-market ratio -- i.e. value stocks -- (4) firms with high operating profitability, (5) firms that invest conservatively, and (6) stocks that have been on a winning streak -- i.e. momentum stocks.
+After reading [The Incredible Shrinking Alpha 2nd edition: How to be a successful investor without picking winners](https://www.amazon.com/gp/product/B08BX5HRLJ) and [Your Complete Guide to Factor-Based Investing: The Way Smart Money Invests Today](https://www.amazon.com/gp/product/B01N7FCW2D) by [Larry Swedroe](https://www.amazon.com/Larry-E-Swedroe/e/B000APJJ8O) and [Andrew Berkin](https://www.amazon.com/Andrew-L-Berkin/e/B01N303388), I decided that I needed a way to find investments with exposure to ["factors"](https://en.wikipedia.org/wiki/Factor_investing). The factors I am searching for are the unique set of factors found in the [Fama French five factor model](https://en.wikipedia.org/wiki/Fama%E2%80%93French_three-factor_model) and the [Carhart four factor model](https://en.wikipedia.org/wiki/Carhart_four-factor_model): (1) market risk, (2) small caps, (3) stocks with a high book-to-market ratio -- i.e. value stocks -- (4) firms with high operating profitability, and (5) firms that invest conservatively. These factors are also known market minus risk free, small minus big, high minus low, robust minus weak, conservative minus aggressive respectively. And they get abbreviated as acronyms.
 
 This application combines the following data sources:
-* Factor return data from [Ken French's data library](http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html)
-* Investment metadata and return data from the Yahoo Finance API
-  * With some help on the metadata from the Seeking Alpha API
-* Ticker symbols by market types (`US`, `Developed ex US`, and `Emerging`) found with the help of [Fidelity's ETF screener](https://research2.fidelity.com/pi/etf-screener)
-  * I look for ETFs of equity funds that are not leveraged or inverse, are not thematic, and have the country exposure appropriate for their market type
+* Factor return data from [Ken French's data library](http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html).
+* Investment metadata and return data from the Yahoo Finance API.
+  * With some help on the metadata from the Seeking Alpha API.
+* Ticker symbols by market types (`US`, `Developed ex US`, and `Emerging`) found with the help of [Fidelity's ETF screener](https://research2.fidelity.com/pi/etf-screener).
+  * I look for ETFs of equity funds that are not leveraged or inverse, are not thematic, and have the country exposure appropriate for their market type.
 
 I am looking for funds that show returns that are statistically significantly similar to the returns of the factors in the Ken French data library.
 
-Since exactly how to choose the "best" fund is complicated, this application doesn't attempt to do that. All it does is pull all the relevant data into a data frame, `df` at the bottom of `__main__.py`. Catch a debug breakpoint beneath it to play with it.
+I try to find the most optimal combination of funds for each market type. My criteria resembles the Sharpe ratio (mean / standard deviation) -- I want maximum exposure to all five factors, and I want my exposure to be divided as equally as possible across all of them. Inspired by [this blog post on how to optimize a portfolio's Sharpe ratio](https://www.kaggle.com/vijipai/lesson-6-sharpe-ratio-based-portfolio-optimization), I employ [scipy's SLSQP optimizer](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html) to do this. I have almost no understanding of the math behind this optimizer. ([An gentle intro for the layman](https://stackoverflow.com/a/43669396/2197402), [a cookbook for the expert](https://docs.mosek.com/modeling-cookbook/intro.html).)
+
+The optimizer can easily get stuck in local optimums, so I run it 100 times, each time with a random sampling of 80% of the data. This seems to mitigate this problem.
 
 ## Getting started
 
