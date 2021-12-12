@@ -62,9 +62,10 @@ class InvestmentReturns:
         if session.query(query.exists()).scalar():
             max_occurred_at = session.query(func.max(InvestmentReturn.occurred_at)).filter(InvestmentReturn.ticker_symbol == ticker_symbol).scalar()
             if max_occurred_at < end:
-                new_start = max_occurred_at + timedelta(days=1)
-                print(f'Ticker price data for ({ticker_symbol}, {new_start}, {end}) not found in the DB, backfilling it from the Yahoo API')
-                percentage_change_data = InvestmentReturns.get_percentage_change_data(ticker_symbol, new_start, end)
+                print(f'Ticker price data for ({ticker_symbol}, {max_occurred_at}, {end}) not found in the DB, backfilling it from the Yahoo API')
+                percentage_change_data = InvestmentReturns.get_percentage_change_data(ticker_symbol, max_occurred_at, end)
+                if percentage_change_data.empty:
+                    print(f'WARNING: No new ticker price data found for ({ticker_symbol}, {max_occurred_at}, {end}) in the Yahoo API')
                 session.add_all([InvestmentReturn(**row) for _, row in percentage_change_data.iterrows()])
                 session.commit()
         else:
