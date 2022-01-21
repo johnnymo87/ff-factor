@@ -1,6 +1,5 @@
 from calendar import monthrange
 from datetime import date
-from datetime import timedelta
 from db.db import Session
 from db.investment_return import InvestmentReturn
 # Pandas to read sql into a dataframe
@@ -71,9 +70,9 @@ class InvestmentReturns:
                 session.commit()
         else:
             print(f'Ticker price data for ({ticker_symbol}, {start}, {end}) not found in the DB, backfilling it from the Yahoo API')
-            this_year, last_month = date.today().year, date.today().month - 1
-            _, last_day = monthrange(this_year, last_month)
-            end = date(this_year, last_month, last_day)
+            one_month_ago = date.today() + pd.offsets.DateOffset(months=-1)
+            _, last_day = monthrange(one_month_ago.year, one_month_ago.month)
+            end = date(one_month_ago.year, one_month_ago.month, last_day)
             percentage_change_data = InvestmentReturns.get_percentage_change_data(ticker_symbol, start, end)
             session.add_all([InvestmentReturn(**row) for _, row in percentage_change_data.iterrows()])
             session.commit()
