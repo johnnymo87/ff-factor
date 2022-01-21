@@ -39,7 +39,6 @@ join (
   ('EMXF'),
   ('ESGE'),
   ('EWX'),
-  ('EYLD'),
   ('FDEM'),
   ('FEM'),
   ('FEMS'),
