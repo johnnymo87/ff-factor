@@ -25,7 +25,9 @@ if __name__ == '__main__':
 
     # Get the investments to study
     # Investments().backfill_facts(market_type)
+    print(f'Looking for investment returns through {ff_ends_at}')
     investments = Investments().query.for_analysis(market_type, ff_ends_at)
+    print(f'Found {len(list(investments))} investments of market type {market_type}')
     # for investment in investments:
     #     try:
     #         InvestmentReturns.backfill_returns(investment.ticker_symbol, ff_starts_at, ff_ends_at)
