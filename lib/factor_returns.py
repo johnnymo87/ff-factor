@@ -22,14 +22,19 @@ class FactorReturns:
             session.commit()
 
     @staticmethod
-    def fetch(market_type_name):
+    def fetch(market_type_name, force_refresh=False):
         """
-        @param [string] The market type, e.g. Emerging
+        @param [String] market_type_name The market type, e.g. Emerging
+        @param [Boolean] force_refresh If True, will wipe data and reimport it.
         @raise [???] If file can't be found
         @raise [???] If the file isn't a CSV
         @return [pandas.core.frame.DataFrame]
         """
         session = Session()
+        # If force_refresh, delete the data so that the rest of the code here
+        # picks up on the need to re-download and write it.
+        if force_refresh:
+            FactorReturn.delete_by_market_type_name(market_type_name)
         factor_returns = FactorReturn.query_by_market_type_name(market_type_name)
         if not session.query(factor_returns.exists()).scalar():
             FactorReturns.download_and_write_data()

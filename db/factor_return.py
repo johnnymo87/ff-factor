@@ -1,6 +1,6 @@
 from db.db import Session
 from db.market_type import MarketType
-from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric
+from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, select, delete
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy_repr import RepresentableBase
@@ -27,3 +27,18 @@ class FactorReturn(Base):
             .query(FactorReturn) \
             .join(FactorReturn.market_type) \
             .filter(MarketType.name == market_type_name)
+
+    @staticmethod
+    def delete_by_market_type_name(market_type_name):
+        """
+        @return [True]
+        """
+        market_type_query = select(MarketType) \
+            .where(MarketType.name == market_type_name)
+        market_type = Session() \
+            .scalars(market_type_query) \
+            .first()
+        delete_command = delete(FactorReturn) \
+            .where(FactorReturn.market_type_id == market_type.id)
+        Session().execute(delete_command)
+        return True
