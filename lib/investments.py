@@ -113,4 +113,4 @@ class Investments:
                 if inception_date is not None and investment.inception_date is None:
                     payload['inception_date'] = datetime.datetime.strptime(inception_date, '%m/%d/%Y')
                 if payload.keys():
-                    self.query.update_by_ticker_symbol(ticker_symbol, payload)
+                    self.query.update_by_ticker_symbol(investment.ticker_symbol, payload)
